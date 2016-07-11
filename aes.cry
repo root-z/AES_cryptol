@@ -1,0 +1,16 @@
+type AES128 = 4
+type AES192 = 6
+type AES256 = 8
+
+type NColumns = AES128
+type NBlocks = 4
+type NRounds = NColumns + 6
+
+type KeySize = (NColumns * 32)
+
+type Field = [8] // The Galois field GF(2^^n)
+
+fieldAdd : {n} (fin n) => [n]Field -> Field
+fieldAdd xs = ys ! 0
+            where ys = [0] # [(+) x y | x <- xs
+                                      | y <- ys]

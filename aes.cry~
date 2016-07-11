@@ -1,0 +1,9 @@
+type AES128 = 4
+type AES192 = 6
+type AES256 = 8
+
+type NColumns = AES128
+type NBlocks = 4
+type NRounds = nk + 6
+
+type KeySize = (NK * 32)
