@@ -95,3 +95,25 @@ subByte' x = subByteTable @ x
 subBytes' : State -> State
 subBytes' s = [ [ subByte b | b <- r ] | r <- s ]
 
+// shiftRows shifts the last three rows of the matrix to the left by 1, 2, 3.
+shiftRows : State -> State
+shiftRows s = [ r <<< shift | r <- s
+                            | shift <- [0 .. 3] ]
+
+// dot-product of 2 vectors over GF(2^8)
+dotProduct : {n} (fin n) => ([n]Field, [n]Field) -> Field
+dotProduct (xs, ys) = fieldSum [ fieldMul (x, y) | x <- xs
+                                                 | y <- ys ]
+
+matrixProduct : {n, m, k} (fin m) => ([n][m]Field, [m][k]Field) -> [n][k]Field
+matrixProduct (x, y) = [ rowProduct (r, y) | r <- x ]
+                  where
+                  rowProduct (a, bMatrix) = [ dotProduct (a, b) | b <- transpose bMatrix ]
+
+mixColumns : State -> State
+mixColumns s = matrixProduct (m, s)
+           where m = [ [2, 3, 1, 1],
+                       [1, 2, 3, 1],
+                       [1, 1, 2, 3],
+                       [3, 1, 1, 2] ]
+                       
