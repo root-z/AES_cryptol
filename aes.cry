@@ -22,7 +22,7 @@ type KeySchedule = (RoundKey, [NRounds - 1]RoundKey, RoundKey)
 
 fieldSum : {n} (fin n) => [n]Field -> Field
 fieldSum xs = ys ! 0
-            where ys = [0] # [(+) x y | x <- xs
+            where ys = [0] # [ x ^ y | x <- xs
                                       | y <- ys]
 
 irreducible = <| x^^8 + x^^4 + x^^3 + x + 1 |>
@@ -33,7 +33,7 @@ fieldMul (x, y) = pmod (pmult x y) irreducible
 fieldPow : (Field, [8]) -> Field
 fieldPow (n, k) = if k == 0 then 1
                 else if odd k then fieldMul (n, fieldPow(n, k-1))                
-                else fieldSquare(fieldMul(n, k/2)) 
+                else fieldSquare(fieldPow(n, k/2)) 
 
 odd : {a, b} (fin a) => [a]b -> b
 odd x = x ! 0
@@ -124,16 +124,16 @@ rCon i = [(fieldPow (<| x |>, i-1)), 0, 0, 0]
 
 rCon' : [8] -> [4]Field
 rCon' i = [
-  [1, 0, 0, 0],
-  [2, 0, 0, 0],
-  [4, 0, 0, 0],
-  [8, 0, 0, 0],
-  [16, 0, 0, 0],
-  [32, 0, 0, 0],
-  [20, 0, 0, 0],
-  [40, 0, 0, 0],
-  [64, 0, 0, 0],
-  [128, 0, 0, 0] ] ! i
+  [0x01, 0, 0, 0],
+  [0x02, 0, 0, 0],
+  [0x04, 0, 0, 0],
+  [0x08, 0, 0, 0],
+  [0x10, 0, 0, 0],
+  [0x20, 0, 0, 0],
+  [0x40, 0, 0, 0],
+  [0x80, 0, 0, 0],
+  [0x1b, 0, 0, 0],
+  [0x36, 0, 0, 0] ] @ (i-1)
 
 subWord : [4]Field -> [4]Field
 subWord bs = [subByte' b | b <- bs]
@@ -163,3 +163,91 @@ expandKey key = (keys @ 0, keys @@ [1 .. (NRounds - 1)], keys @ `NRounds)
               where seed : [NColumns][4][8]
                     seed = split (split key)
                     keys = expandForever seed
+
+fromKeySchedule : KeySchedule -> [NRounds + 1][4][32]
+fromKeySchedule(f, ms, l) = [
+                     formKeyWords (transpose k)
+                   | k <- [f] # ms # [l]
+                   ]
+                   where formKeyWords matrix = [ join r | r <- matrix ]
+
+addRoundKey : (RoundKey, State) -> State
+addRoundKey (roundKey, state) = roundKey ^ state
+
+// each AES round applies subBytes, shiftRows, mixColumns, and addRoundKey in order
+singleRound : (RoundKey, State) -> State
+singleRound (roundKey, state) =
+            addRoundKey (roundKey, mixColumns (shiftRows (subBytes state)))
+
+// mixColumns is omitted in the last round
+finalRound : (RoundKey, State) -> State
+finalRound (roundKey, state) =
+          addRoundKey (roundKey, shiftRows (subBytes state))
+
+toState : [128] -> State
+toState text = transpose (split (split text))
+
+fromState : State -> [128]
+fromState state = join (join (transpose state))
+
+last x = x ! 0
+
+encrypt : ([128], [KeySize]) -> [128]
+encrypt (plainText, key) = fromState (finalRound (lastKey, last (firstStates)))
+        where (firstKey, middleKeys, lastKey) = expandKey key
+              initState = addRoundKey (firstKey, toState plainText)
+              firstStates = [initState] # [singleRound (roundKey, state)
+                                          | roundKey <- middleKeys
+                                          | state <- firstStates]
+
+// Decryption
+
+reverseFormByte : Field -> Field
+reverseFormByte b = (b >>> 2) ^ (b >>> 5) ^ (b >>> 7) ^ d
+                 where d = 0x05
+
+reverseSubBytes : State -> State
+reverseSubBytes state = [
+                [ reverseSubByte b | b <- r ]
+                | r <- state
+                ] 
+                where
+                reverseSubByte : Field -> Field
+                reverseSubByte b = fieldInverse (reverseFormByte b)
+
+//reverse of shiftRows
+reverseShiftRows : State -> State
+reverseShiftRows state = [
+                 r >>> shift
+                 | r <- state
+                 | shift <- [0..3]
+                 ]
+
+//reverse mix columns
+reverseMixColumns : State -> State
+reverseMixColumns state = matrixProduct (m, state)
+                  where m = [
+                            [0x0e, 0x0b, 0x0d, 0x09],
+                            [0x09, 0x0e, 0x0b, 0x0d],
+                            [0x0d, 0x09, 0x0e, 0x0b],
+                            [0x0b, 0x0d, 0x09, 0x0e]]
+
+reverseSingleRound : (RoundKey, State) -> State
+reverseSingleRound (roundKey, state) =
+                   reverseMixColumns
+                        (addRoundKey (roundKey,
+                                     reverseSubBytes (reverseShiftRows state)))
+
+reverseFinalRound : (RoundKey, State) -> State
+reverseFinalRound (roundKey, state) =
+                  addRoundKey (roundKey, reverseSubBytes (reverseShiftRows state))
+
+decrypt : ([128], [KeySize]) -> [128]
+decrypt (cipher, key) = fromState (reverseFinalRound (firstKey, last firstStates))
+        where (firstKey, middleKeys, lastKey) = expandKey key
+              initState = addRoundKey (lastKey, toState cipher)
+              firstStates = [initState] # [ reverseSingleRound (roundKey, state)
+                                          | roundKey <- reverse middleKeys
+                                          | state <- firstStates
+                                          ]
+                                          
