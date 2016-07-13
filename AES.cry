@@ -1,43 +1,58 @@
 /*
- * Author: Zhiyuan Lin
- *
+ * Implementation of AES algorithm 
+ * with correctness properties to be verified
+ * This implementation is based on the AES standard 
+ * and Programming in Cryptol.
+ * see AESCorrect.cry for correctness properties of the functions
+ * 
  */
 
 module AES where
 
+// the three different sizes of AES keys
 type AES128 = 4
 type AES192 = 6
 type AES256 = 8
 
-type NColumns = AES128
+type NColumns = AES128 // use 128-bit key by default
 type NBlocks = 4
-type NRounds = NColumns + 6
+type NRounds = NColumns + 6 // 10, 12, 14 rounds depending on the key size
 
 type KeySize = (NColumns * 32)
 
-type Field = [8] // The Galois field GF(2^^n)
+// The Galois field GF(2^^n)
+type Field = [8]
+// a state in AES is a 4*4 matrix of 8-bit keys
 type State = [4][NBlocks]Field
-type RoundKey = State
-type KeySchedule = (RoundKey, [NRounds - 1]RoundKey, RoundKey)
+// Each round key is the same as state
+type RoundKey = State 
 
+type KeySchedule = (RoundKey, [NRounds - 1]RoundKey, RoundKey) // for key expansion
+
+// sum of polynomials on GF(2^8)
 fieldSum : {n} (fin n) => [n]Field -> Field
 fieldSum xs = ys ! 0
             where ys = [0] # [ x ^ y | x <- xs
                                       | y <- ys]
+                                      
 
 irreducible = <| x^^8 + x^^4 + x^^3 + x + 1 |>
 
+// field multiplication
 fieldMul : (Field, Field) -> Field
 fieldMul (x, y) = pmod (pmult x y) irreducible
 
+// field exponentiation
 fieldPow : (Field, [8]) -> Field
 fieldPow (n, k) = if k == 0 then 1
                 else if odd k then fieldMul (n, fieldPow(n, k-1))                
                 else fieldSquare(fieldPow(n, k/2)) 
 
+// true if integer is odd
 odd : {a, b} (fin a) => [a]b -> b
 odd x = x ! 0
 
+//field square
 fieldSquare : Field -> Field
 fieldSquare x = fieldMul (x, x)
 
@@ -46,8 +61,12 @@ fieldInverse : Field -> Field
 fieldInverse x = if x == 0 then 0
                  else fieldPow (x, 254) // does not seem to be the most efficient way
 
+
 // property: prove that pow and inverse is correct
 
+/*
+ * Encryption functions
+ */
 
 formByte : Field -> Field
 formByte b = b ^ (b >>> 4) ^ (b >>> 5) ^ (b >>> 6) ^ (b >>> 7) ^ c
@@ -62,7 +81,7 @@ subBytes : State -> State
 subBytes s = [ [ subByte b | b <- r ] | r <- s ]
 // for each row in state, and each byte in row, subByte b
 
-
+// sBox is a lookup table provided in the AES standard
 subByteTable : [256] Field
 subByteTable = [
      0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
@@ -88,7 +107,8 @@ subByteTable = [
      0x86, 0xc1, 0x1d, 0x9e, 0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e,
      0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 0x8c, 0xa1,
      0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0,
-     0x54, 0xbb, 0x16]
+     0x54, 0xbb, 0x16
+     ]
 
 // a more efficient version of subByte, also used for verification
 subByte' : Field -> Field
@@ -96,6 +116,7 @@ subByte' x = subByteTable @ x
 
 subBytes' : State -> State
 subBytes' s = [ [ subByte b | b <- r ] | r <- s ]
+
 
 // shiftRows shifts the last three rows of the matrix to the left by 1, 2, 3.
 shiftRows : State -> State
@@ -106,7 +127,7 @@ shiftRows s = [ r <<< shift | r <- s
 dotProduct : {n} (fin n) => ([n]Field, [n]Field) -> Field
 dotProduct (xs, ys) = fieldSum [ fieldMul (x, y) | x <- xs
                                                  | y <- ys ]
-
+// the product of 2 matrices
 matrixProduct : {n, m, k} (fin m) => ([n][m]Field, [m][k]Field) -> [n][k]Field
 matrixProduct (x, y) = [ rowProduct (r, y) | r <- x ]
                   where
@@ -119,9 +140,12 @@ mixColumns s = matrixProduct (m, s)
                        [1, 1, 2, 3],
                        [3, 1, 1, 2] ]
 
+// computing round constants
 rCon : [8] -> [4]Field
 rCon i = [(fieldPow (<| x |>, i-1)), 0, 0, 0]
 
+// because the rCon function only takes input from 1 to 10,
+// the values can be pre-computed into a lookup table
 rCon' : [8] -> [4]Field
 rCon' i = [
   [0x01, 0, 0, 0],
@@ -135,12 +159,14 @@ rCon' i = [
   [0x1b, 0, 0, 0],
   [0x36, 0, 0, 0] ] @ (i-1)
 
+// substituing a word is just substituing each byte in the word
 subWord : [4]Field -> [4]Field
 subWord bs = [subByte' b | b <- bs]
 
 // rotate the word 1 pace to the left
 rotateWord : [4]Field -> [4]Field
 rotateWord xs = xs <<< 1
+
 
 nextWord : ([8], [4][8], [4][8]) -> [4][8]
 nextWord (i, prev, old) = old ^ mask
@@ -158,6 +184,7 @@ expandForever seed = [ transpose g | g <- groupBy`{4} keyWS ]
                                    | old <- keyWS
                                    ]
 
+// expanding a single key into key schedules
 expandKey : [KeySize] -> KeySchedule
 expandKey key = (keys @ 0, keys @@ [1 .. (NRounds - 1)], keys @ `NRounds)
               where seed : [NColumns][4][8]
@@ -171,6 +198,7 @@ fromKeySchedule(f, ms, l) = [
                    ]
                    where formKeyWords matrix = [ join r | r <- matrix ]
 
+// AddRoundKey addsround key to a state. In Cryptol is simple xor operation
 addRoundKey : (RoundKey, State) -> State
 addRoundKey (roundKey, state) = roundKey ^ state
 
@@ -184,14 +212,23 @@ finalRound : (RoundKey, State) -> State
 finalRound (roundKey, state) =
           addRoundKey (roundKey, shiftRows (subBytes state))
 
+// transform from plaintext to AES state
 toState : [128] -> State
 toState text = transpose (split (split text))
 
+// from AES state to plaintext
 fromState : State -> [128]
 fromState state = join (join (transpose state))
 
 last x = x ! 0
 
+/*
+ * AES encryption function
+ * 1. expand key into key schedule
+ * 2. add round key to the first state
+ * 3. Run singleRound NRounds times with the sequence of middle keys
+ * 4. Run finalRound with lastKey
+ */
 encrypt : ([128], [KeySize]) -> [128]
 encrypt (plainText, key) = fromState (finalRound (lastKey, last (firstStates)))
         where (firstKey, middleKeys, lastKey) = expandKey key
@@ -200,7 +237,10 @@ encrypt (plainText, key) = fromState (finalRound (lastKey, last (firstStates)))
                                           | roundKey <- middleKeys
                                           | state <- firstStates]
 
-// Decryption
+/*
+ * Decryption functions
+ * mostly reverse of the encryption functions
+ */
 
 reverseFormByte : Field -> Field
 reverseFormByte b = (b >>> 2) ^ (b >>> 5) ^ (b >>> 7) ^ d
@@ -242,6 +282,7 @@ reverseFinalRound : (RoundKey, State) -> State
 reverseFinalRound (roundKey, state) =
                   addRoundKey (roundKey, reverseSubBytes (reverseShiftRows state))
 
+// decryption function
 decrypt : ([128], [KeySize]) -> [128]
 decrypt (cipher, key) = fromState (reverseFinalRound (firstKey, last firstStates))
         where (firstKey, middleKeys, lastKey) = expandKey key
@@ -251,3 +292,8 @@ decrypt (cipher, key) = fromState (reverseFinalRound (firstKey, last firstStates
                                           | state <- firstStates
                                           ]
                                           
+// helper function: given an element and a list, check if the element is in the list
+elem (x, xs) = matches ! 0
+     where matches = [False] # [ m || (x==3) | e <- xs
+                                             | m <- matches ]
+

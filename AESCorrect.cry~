@@ -1,0 +1,41 @@
+module AESCorrect where 
+
+import AES
+
+
+// verifying that the sum of two same polynomials is always zero
+polySelfAdd : Field -> Bit
+property polySelfAdd p = fieldSum ps == 0
+         where ps = [p] # [p]
+
+// checking correctness of the field multiplication
+mulIden : Field -> Bit
+property mulIden x = fieldMul (x, 1) == x
+
+mulCommutative : (Field, Field) -> Bit
+property mulCommutative (x, y) = fieldMul (x, y) == fieldMul (y, x)
+
+// By definition of multiplicative inverse.
+// property proved
+mulInverseCorrect : Field -> Bit
+property mulInverseCorrect i =
+         if i == 0
+         then True
+         else fieldMul (i, fieldInverse(i)) == 1
+
+// verifying the two versions of subByte is the same
+subByteCorrect : State -> Bit
+property subByteCorrect s = subBytes s == subBytes' s
+
+// for some reasons can't be proved, but passed tests
+rConCorrect : [8] -> Bit
+property rConCorrect i =
+         if elem (i, [1..10])
+         then rCon i == rCon' i
+         else True
+
+
+// correctness property for the entire implementation
+// this property is inefficient to prove
+aesCorrect : ([128], [128]) -> Bit
+property aesCorrect (m, k) = decrypt (encrypt (m, k), k) == m

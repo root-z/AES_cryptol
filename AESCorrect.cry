@@ -1,0 +1,103 @@
+/*
+ * This module contains the correctness properties devised for 
+ * the AES algorithm.
+ * Some of the properties cannot be efficiently proved, 
+ * in which case we use random testing instead to provide
+ * some guarantee of their correctness
+ */
+ 
+module AESCorrect where 
+
+import AES
+
+
+// verifying that the sum of two same polynomials is always zero
+polySelfAdd : Field -> Bit
+property polySelfAdd p = fieldSum ps == 0
+         where ps = [p] # [p]
+
+// checking correctness of the field multiplication
+// identity element, proved
+mulIden : Field -> Bit
+property mulIden x = fieldMul (x, 1) == x
+
+// commutative property of multiplication
+// proved 
+mulCommutative : (Field, Field) -> Bit
+property mulCommutative (x, y) = fieldMul (x, y) == fieldMul (y, x)
+
+// associative property
+mulAssociative : (Field, Field, Field) -> Bit
+property mulAssociative (x, y, z) =
+         fieldMul (fieldMul (x, y), z) == fieldMul (x, fieldMul (y, z))
+
+// By definition of multiplicative inverse.
+// property proved
+mulInverseCorrect : Field -> Bit
+property mulInverseCorrect i =
+         if i == 0
+         then True
+         else fieldMul (i, fieldInverse(i)) == 1
+
+// verifying the two versions of subByte is the same
+// proved
+subByteCorrect : State -> Bit
+property subByteCorrect s = subBytes s == subBytes' s
+
+// prove that applying shiftRows to the same state 4 times
+// results in the original state
+// proved
+shiftRowsCorrect : State -> Bit
+property shiftRowsCorrect s = shiftRowsN s 4 == s
+
+// apply shift rows multiple times
+shiftRowsN : {a} (a >= 1, fin a) => State -> [a] -> State
+shiftRowsN s n =
+          if n == 0
+          then s
+          else shiftRowsN (shiftRows s) (n-1)
+
+
+
+// prove that the table version and original version
+// are equivalent.
+// for some reasons the proof does not terminate, but passed tests
+rConCorrect : [8] -> Bit
+property rConCorrect i =
+         if i >= 0 || i <= 10
+         then rCon i == rCon' i
+         else True
+
+// formByte and reverseFormByte verifies each other
+// proved
+formByteCorrect : Field -> Bit
+property formByteCorrect i =
+         reverseFormByte (formByte i) == i
+
+// toState and fromState verifies each other
+// proved
+toFromStateCorrect : [128] -> Bit
+property toFromStateCorrect m = m == fromState (toState m)
+
+// shiftRows and its reverse can verify each other
+// proved
+reverseShiftRowsCorrect : State -> Bit
+property reverseShiftRowsCorrect s =
+         s == reverseShiftRows (shiftRows s)
+
+// mixColumns and its reverse also verifies each other
+// too slow to prove, passed tests
+mixColumnsCorrect : State -> Bit
+property mixColumnsCorrect s =
+         s == reverseMixColumns (mixColumns s)
+
+// matrix multiplication distributive
+// matrixMulDist : {n, m, k} (fin m, fin n, fin k)
+//               => ([n][m]Field, [m][k]Field, [m][k]Field) -> [n][k]Field
+// matrixMulDist (a, b, c) = matrixProduct a
+
+// correctness property for the entire implementation
+// this property is inefficient to prove
+// passed tests
+aesCorrect : ([128], [128]) -> Bit
+property aesCorrect (m, k) = decrypt (encrypt (m, k), k) == m
