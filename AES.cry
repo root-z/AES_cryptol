@@ -34,8 +34,9 @@ fieldSum : {n} (fin n) => [n]Field -> Field
 fieldSum xs = ys ! 0
             where ys = [0] # [ x ^ y | x <- xs
                                       | y <- ys]
-                                      
 
+
+// irreducible polynomial as specified in fips-197
 irreducible = <| x^^8 + x^^4 + x^^3 + x + 1 |>
 
 // field multiplication
