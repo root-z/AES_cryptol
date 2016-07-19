@@ -1,0 +1,222 @@
+\documentclass[a4paper, notitlepage]{report}
+\usepackage{graphicx}
+
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{amsmath}
+\usepackage{listings}
+
+\setlength{\parskip}{1em}
+
+\usepackage{titlesec, color}
+\usepackage[Lenny]{fncychap}
+
+
+%% \usepackage[T1]{fontenc}
+%% \usepackage{titlesec, blindtext, color}
+%% \definecolor{gray75}{gray}{0.75}
+%% \newcommand{\hsp}{\hspace{20pt}}
+%% \titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+
+
+
+\usepackage{etoolbox}
+
+\lstset{
+  breaklines=true,
+  basicstyle=\ttfamily,
+  numbers=left
+}
+
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
+
+\title{Cryptol: A Domain Specific Language for  Verification of Cryptographic Algorithms}
+\author{Zhiyuan Lin}
+\date{\today}
+
+
+
+\begin{document}
+
+%{\let\newpage\relax\maketitle}
+\maketitle
+\begin{abstract}
+Cryptographic algorithms are an important component to modern network systems. They are also hard to implement 
+and verify in nature. The Cryptol language is a domain specific language designed for writing cryptographic algorithms.
+It provides a unique solution to specifying and verifying cryptographic implementations. This project aims to investigate Cryptol and similar languages and evaluate how cryptographic algorithms in Cryptol could be more reliable than those written 
+in other languages. 
+\end{abstract}
+
+\newpage
+\vspace{30pt}
+
+
+
+\chapter{Introduction}
+
+
+Cryptographic algorithms are becoming an increasingly important component
+of software, especially network systems. However, implementing cryptographic algorithm is harder than it looks.
+In fact developers are often advised against
+implementing their own cryptographic algorithms
+because of the complexity involved.
+Even engineers experienced in software security mess up the implementation,
+often due to lack of understanding in the mathematical principle
+behind the design.
+Cryptographic systems are delicate constructs,
+and their implementation requires care and precision.
+Simple bad practices such as using an insecure random number generator,
+or reusing the same private key would render the the entire system ineffective
+and vulnerable to attacks.
+Other implementation details such as storing the plaintext in temporary memory
+could also make the whole protocol useless.
+A real-world example of such problems is the heartbleed bug
+found in the widely used OpenSSL library.
+The bug allows someone from the Internet to access the memory of the system
+and steal the secret key, in which case the security of the communication
+system is completely compromised.
+
+Another problem with implementing cryptographic algorithms is that the algorithms are often specified in academic papers which focus on the valuable theory, yet leaves out the technical details that affect the theory. Moreover, the specifications are usually written in a combination of mathematical equations and pseudo code, which could cause misunderstanding for developers unfamiliar with the subject.
+
+Extensive testing and verification is required
+to ensure the correctness of cryptographic implementations
+before they can be used with confidence in production.
+Studies have been done on using formal verification
+and testing of cryptographic systems.
+There are also industrial testing labs for security-intensive applications,
+which utilize formal methods and other techniques to verify implementations.
+However, not many open-source tools are available
+for verification of security protocol.
+
+Cryptol~\cite{lewis2003cryptol} provides a unique solution to the problem of
+ensuring correctness of cryptographic systems. Cryptol is a
+open-sourced domain specific language designed for specifying 
+cryptographic algorithms.
+It offers high assurance to cryptographic algorithms in several ways.
+First of all, Cryptol is a high-level language with syntax similar to Haskell.
+It frees developer from low-level concerns such as memory allocation.
+Cryptol also offers an interactive mode just as Haskell does to facilitate
+rapid development.
+Moreover, an algorithm written in Cryptol can be seen as
+precise and abstract specification of the algorithm itself.
+Another important feature of Cryptol is that it facilitates validation and
+verification of cryptographic implementations.
+For example, Cryptol supports construction of formal models.
+Cryptol could also be used to generate implementations automatically
+for hardware and software platforms. The generated implementations
+supposedly has the same reliability guarantee as the original Cryptol
+implementation. With these facilities, Cryptol could also serve as
+a platform for experimenting with new algorithms, and could effectively
+bridge the gap between development and production.
+
+\begin{figure}
+  \begin{lstlisting}[language=Haskell, frame=single]
+    f1 (x, y) = x^^2 - y^^2
+    f2 (x, y) = (x+y) * (x-y)
+    funcEq: ([16], [16]) -> Bit
+    property funcEq (x, y) = f1 (x, y) == f2 (x, y)
+  \end{lstlisting}
+  \caption{Defining a property in Cryptol}
+  \label{fig:property}
+\end{figure}
+
+Figure~\ref{fig:property} shows an example of how Cryptol can be used to
+define important properties of the cryptographic system.
+Line 1 and 2 of Figure~\ref{fig:property} are function declarations
+that are self-explanatory.
+Line 3 and 4 defines the property that $x^2 - y^2 = (x+y)(x-y)$, which
+is obviously true. 
+
+After such a property is defined we can use the commands
+in Figure~\ref{fig:verify} in the interactive mode to formally check the property. The command \emph{:prove} asks the Cryptol runtime to construct formal
+proof for the property. This approach  however inefficient in the worst case.
+Therefore the command \emph{:check} which tests the property with randomly
+generated input is also useful in practice. There are other facilities provided
+by Cryptol.
+
+\begin{figure}[h]
+  \begin{lstlisting}[language=Haskell, frame=single]
+    Cryptol> :prove funcEq
+    Cryptol> :check funcEq
+  \end{lstlisting}
+  \caption{Verifying Properties in Cryptol}
+  \label{fig:verify}
+\end{figure}
+
+Using programming language to enhance reliability of cryptographic applications
+is a novel idea. With the important functions such verification that Cryptol
+promises it would be interesting to investigate how these functions
+are achieved in the language, and empirically evaluate how the language
+helps to create better cryptographic applications.
+
+\chapter{Objectives and Plan}
+
+The aim of this project is to investigate domain specific languages
+that enhance reliability of cryptographic algorithms. The focus of this
+work is on Cryptol, however other languages with similar facilities will
+also be covered as related works.
+
+\begin{figure}[h]
+  \centering
+\begin{tabular}{| l | p{5cm} |}
+  \hline
+  May 25th - June 2nd: & Surveying Cyptol and similar languages \\
+  \hline
+  June 2nd - June 9th: & In-depth investigation of Cryptol's design and theory \\
+  \hline
+  June 9th - June 23rd: & Implementing AES algorithm in Cryptol \\
+  \hline
+  June 23rd - July 30th: & Verification of implementaion using Cryptol and SAW. \\
+  \hline
+  July 30th - July 7th: & Finishing up evaluation and writing report \\
+  \hline
+  July 7th - July 14th: & Preparing for presentation \\
+  \hline
+\end{tabular}
+\caption{Time Line of The Project}
+\label{fig:time}
+\end{figure}
+
+
+Therefore the first part of the project will be a brief survey of Cryptol
+and similar languages. This part will also cover high-level design of
+the Cryptol language and theory behind its functions for formal verification.
+
+The second part of the project will be empirical study of the Cryptol language
+with an implementation.
+For the implementation part, the AES symmetric-key algorithm
+\cite{standard2001announcing, bertoni2002efficient} is to be implemented
+ and properties related to the algorithm will be defined and checked
+in Cryptol to evaluate whether the language can efficiently verify
+the implementation. AES is chosen because it is the modern standard
+for symmetric-key encryption is widely used. 
+The focus in this part is the evaluation of the language,
+rather than actual implementation of the algorithm, therefore other
+algorithms written in Cryptol, if available, will
+also be used to conduct empirical evaluations.
+
+Another tool provided as a part of the Cryptol project is called
+The Software Analysis Workbench (SAW). SAW also provides formal verification
+for properties of programs written in Cryptol.
+SAW utilizes symbolic execution to translate programs into formal models.
+This tool will also be used to verify the AES implementation in Cryptol
+in order to see if it provides better functionalities for verification.
+
+Figure~\ref{fig:time} provides a time frame for the project. This is just
+a rough estimation, but the project will follow the steps specified.
+As mentioned before, because the focus is investigation
+of the Cryptol language, more time will be spent on evaluating the language
+functionalities. 
+
+
+
+
+\newpage
+
+\bibliographystyle{ieeetr}
+\bibliography{proposal}
+
+\end{document}
