@@ -48,14 +48,17 @@
 \end{abstract}
 
 \newpage
-\vspace{30pt}
 
+\tableofcontents
+
+\newpage
 
 
 \chapter{Introduction}
 
 \section{Organizations}
 
+\newpage
 \chapter{Literature Survey}
 
 In this chapter we present previous works that uses programming
@@ -67,20 +70,54 @@ the Cryptol programming language and the guarantees it provides.
 \section{Languages for Cryptographic Applications}
 \label{sec:crypto_lang}
 
-The idea of using lasnguage features to enhance cryptogprahic applications 
+The idea of using language features to enhance cryptogprahic applications 
 have been investigated for over a decade. Some works, such 
 as \cite{akinyele2013charm} builds upon existing languages, and provides
-extensions for efficient implementation of cryptographic protocols. 
+extensions, e.g. libraries and frameworks, for efficient implementation 
+of cryptographic protocols. 
 Other studies~\cite{lewis2003cryptol} create brand-new domain specific 
 programming languages dedicated to cryptographic applications. These
 works also focus on different aspects of implementation. Some focus
 on relaibility and correctness guarantees, while others emphasize ease 
 of use and performance.
 
+Charm~\cite{akinyele2013charm} is an extensible framework in Python 
+designed for rapid prototyping of cryptographic schemes. Charm promotes
+modularity and reusability of cryptographic primitives, and successfully 
+increases inter-operability of existing numeric libraries such Sage and
+the Stanford Pairing-Based Crypto (PBC). It also provides benchmarking
+and profiling utilities for determining the performance of cryptographic
+algorithms.
+
+NaCl~\cite{bernstein2012security} is a C/C++ library for implementing 
+cryptographic protocols that 
+provides security guarantee through features such as no data flow from 
+secrets to load address, and no padding oracles. 
+
+ZKPDL~\cite{meiklejohn2010zkpdl} is an interpreted description language 
+for specifying zero-knowledge protocols, motivated by applications such
+as electronic cash. Although the language is designed specifically for
+implementing prover and verifer of zero-knowledge, the language itself 
+also have potentials for specifying other types of privacy-preserving 
+systems. The ZKPDL interpreter also performs optimizations for protocols.
+
+EasyCrypt~\cite{barthe2014easycrypt} is an interactive framework for 
+verifying the security 
+of cryptographic applications. Building on EasyCrypt, 
+The Ceritified computer-aided cryptography~\cite{almeida2013certified} 
+project provides a computer-aided framework for proving concrete security for
+ cryptogprahic implementations. It extends the EasyCrypt framework to
+provide formal verification for cryptographic applications implemented 
+in a C-like language. The framework also supports generation of 
+optimized machine code based on the high-level language while
+retaining the security properties.
+
 
 
 \section{The Cryptol Language}
 \label{sec:cryptol}
+
+\newpage
 
 \chapter{Implementation and Empirical Evaluation}
 
@@ -150,6 +187,7 @@ As mentioned before, because the focus is investigation
 of the Cryptol language, more time will be spent on evaluating the language
 functionalities. 
 
+\chapter{Conclusion and Future Works}
 
 
 
