@@ -101,21 +101,66 @@ implementing prover and verifer of zero-knowledge, the language itself
 also have potentials for specifying other types of privacy-preserving 
 systems. The ZKPDL interpreter also performs optimizations for protocols.
 
-EasyCrypt~\cite{barthe2014easycrypt} is an interactive framework for 
-verifying the security 
-of cryptographic applications. Building on EasyCrypt, 
+Similar to ZKPDL, TASTY~\cite{henecka2010tasty} is a novel compiler
+designed specifically for generating efficient two-party computation
+protocols. TASTY provides a high-level domain specific language in which
+the user can specify the computation to be performed on encrypted data, 
+and the compiler would translate that directly to a secure protocol.
+Moreover, TASTY uses the FairPlay~\cite{malkhi2004fairplay} system to
+evaluate the protocol generated.
+
 The Ceritified computer-aided cryptography~\cite{almeida2013certified} 
 project provides a computer-aided framework for proving concrete security for
- cryptogprahic implementations. It extends the EasyCrypt framework to
+ cryptogprahic implementations. It extends EasyCrypt, an interative framework
+for verifying the security of cryptographic applications, to
 provide formal verification for cryptographic applications implemented 
 in a C-like language. The framework also supports generation of 
 optimized machine code based on the high-level language while
 retaining the security properties.
 
+One of the study that is perhaps closest to Cryptol is 
+CAO~\cite{moss2010bridging}, a language designed to facilitate high-level,
+performant implementation of the AES algorithm. The CAO compiler utilises
+advanced techniques to improve performance of the implementation, but 
+provides no specific functions for verifying the correctness of the algorithm.
+Agosta et al.~\cite{agosta2007domain} also proposed a domain specific language
+for cryptography based on Python. The major benefit that this work provides,
+however, is syntactic.
 
+cPLC~\cite{bangerter2011cplc} is a more recent attempt at providing a domain
+specific languages for cryptogprahy. Instead of borrowing the syntax of existing
+programming languages, cPLC provides a language that is closed to the 
+mathematical notations used in the cryptography community to describe 
+protocols. Moreover cPLC provides native support for mathematical entities
+and operations such as groups that are often used in cryptography.
+
+${\mu}Cryptol$~\cite{shields2006language,pike2006verifying} is a language
+ derived from Cryptol. The 
+study focuses providing a verifying compiler that proves the correctness
+of the code tranformation process.
+
+Cryptol applies techniques for formal verification of cryptographic protocols,
+a subject that have been studied for decades. We refer to~\cite{meadows1994formal} for these works.
 
 \section{The Cryptol Language}
 \label{sec:cryptol}
+
+As has been mentioned before, Cryptol is a high-level programming language
+designed for cryptogpraphy. It provides a formal methods-based approach
+to cryptographic developments.
+
+The Cryptol language offers several benefits to development of cryptographic
+protocols:
+\begin{itemize}
+\item Implementation of cryptographic algorithms is Cryptol can serve as 
+a high-level formal specification or at least reference implementation 
+of the algorithm
+\item The Cryptol language also provides high assurance of the correctness
+of the implementation.
+\item The Cryptol source program can be used as source for code generation
+to multiple target platforms.
+\end{itemize} 
+
 
 \newpage
 
@@ -187,6 +232,7 @@ As mentioned before, because the focus is investigation
 of the Cryptol language, more time will be spent on evaluating the language
 functionalities. 
 
+\newpage
 \chapter{Conclusion and Future Works}
 
 
