@@ -24,6 +24,8 @@
 
 \usepackage{etoolbox}
 
+\renewcommand{\paragraph}[1]{\vspace*{1em}\noindent\textbf{#1}\hspace*{1em}}
+
 \lstset{
   breaklines=true,
   basicstyle=\ttfamily,
@@ -152,14 +154,194 @@ to cryptographic developments.
 The Cryptol language offers several benefits to development of cryptographic
 protocols:
 \begin{itemize}
-\item Implementation of cryptographic algorithms is Cryptol can serve as 
-a high-level formal specification or at least reference implementation 
-of the algorithm
-\item The Cryptol language also provides high assurance of the correctness
-of the implementation.
+\item Cryptol is designed to be the standard language of cryptography
+\item The Cryptol language provides high assurance of the correctness
+of the implementation
 \item The Cryptol source program can be used as source for code generation
-to multiple target platforms.
+to multiple target platforms
 \end{itemize} 
+
+We introduce the features that bring about these benefits in detail below.
+
+%\paragraph{The Standard Language of Cryptography}
+\subsection{The Standard Language of Cryptography}
+
+Cryptol is ambitiously designed to become the standard language of cryptography.
+Implementation of cryptographic algorithms in Cryptol are expected to serve as 
+a high-level formal specification or at least reference implementation 
+of the algorithms.
+This means that the language allows for algorithms specified in academic
+papers and standards to be translated into Cryptol source code in a manner that
+is straightforward and readable.
+Moreover, Cryptol frees developers from machine level detail
+so that they could focus on developing new algorithms.
+
+To achieve this goal, Cryptol is designed to be a pure functional programming
+language similar to Haskell. The Cryptol syntax, just like Haskell's, is
+heavily inspired mathematical notations, and therefore can express computations
+in cryptographical protocols easily.
+It is also argued that functional programs
+are usually shorter and easier to understand.
+The persistent data structures provided in Cryptol
+allows for easier analysis and optimization of computation. Furthermore,
+the functional style naturally helps to create simple and clean abstractions so
+that the program is well-structured. 
+
+\subsection{High Assurance Programming}
+
+To serve as authoritative specifications, Cryptol programs need
+to be correct first. Cryptol comes with several features that provides strong
+guarantees of correctness of functions:
+\begin{itemize}
+\item Type System
+\item Formal Verification 
+\item Automated Testing
+\end{itemize}
+
+\paragraph{Type System}
+
+Cryptol uses a type system based on the Hindley-Milner
+type system~\cite{hindley1969principal}, extend with size-polymorphism
+and arithmetic type predicates~\cite{lewis2003cryptol}. The type system
+is designed capture constraints that naturally arise from cryptographic
+algorithms such as fixed-size keys and input blocks.
+
+\begin{figure}
+\begin{lstlisting}[frame=single]
+encrypt: {n} (0 < n, n < 3) => [8*n] -> [8*n]
+\end{lstlisting}
+\caption{Cryptol Type Signature}
+\label{fig:type}
+\end{figure}
+
+See Figure~\ref{fig:type} for an example of type signatures in Cryptol.
+The signature specifies a function \emph{encrypt} that takes as input
+an 8-bit or 16-bit integer and output a number of the same size.
+The quantified type variable \emph{n} in the type signature are bounded
+by the predicates $ 0 < n$ and $n < 3$. The predicates put a limit on the
+values of the type variable. Any arithmetic operations can be used in
+such predicates.
+Type signatures of these kinds rule out a large number of illegal input
+statically and provides strong guarantees to the correctness of the program.
+The AES algorithm~\cite{standard2001announcing} for example operates on 128, 192
+or 256-bit keys. Such a constraint can precisely specified and checked in
+Cryptol type system.
+
+\paragraph{Formal Verification and Automated Testing}
+
+The Cryptol language provides native formal verification utilities designed for
+equivalence and safety-checking. Correctness properties can be specified in Cryptol
+as part of the source code accompanying the algorithm. The Cryptol checker then
+checks for correctness of property with the SAT/SMT solvers. The Z3 prover is used
+by default.
+
+Figure~\ref{fig:property} shows a correctness property defined in Cryptol. The
+property states simply that decryption after encryption with the same key should
+result in the original message. We can see that a correctness property in Cryptol
+is but another function that returns a Bit (boolean) type value.
+
+The Cryptol language provides an interactive mode similar to Haskell's with which
+developers can test functions interactively.
+Cryptol can conduct verification of the above property automatically with a simple
+\emph{:prove} command issued in its interative prompt, as shown in Figure~\ref{fig:prove}.
+
+\begin{figure}
+  \begin{lstlisting} [frame=single]
+    encrypt: {n} [8] -> String n -> String n
+    // implementation of encryption
+    
+    decrypt: {n} [8] -> String n -> String n
+    // implementation of decryption
+
+    encryptCorrect: {n} [8] -> String n -> Bit
+    property encryptCorrect =
+             decrypt key (encrypt key msg) == msg 
+  \end{lstlisting}
+  
+  \caption{Correctness Property in Cryptol}
+  \label{fig:property}
+\end{figure}
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    >> :prove encryptCorrect
+    >> Q.E.D
+  \end{lstlisting}
+  \caption{Proving Correctness Properties in Cryptol}
+  \label{fig:prove}
+\end{figure}
+
+In cases where the property is invalid, the Cryptol checker provides an input
+for which the property does not hold true as counterexample. This gives developers
+a concrete scenario to look into and debug.
+
+Because Cryptol properties are just functions, it is possible to write conditions
+in the property to construct proofs efficiently for more restricted scenarios.
+For polymorphic functions, we can also restrict its type signatures when
+proving properties.
+
+Of course it is possible that external theorem prover used by Cryptol could
+not finish the proof within a reasonable amount of time. Therefore Cryptol
+also provides another command \emph{:check} that can be used in the same way
+as \emph{:prove} to conducted automated testing on the property. Figure~\ref{fig:test}
+demonstrates how this utility can be used in Cryptol.
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    >> :set tests=10000
+       // setting number of test cases generated 
+    >> :check encryptCorrect
+  \end{lstlisting}
+  \caption{Testing Correctness Properties in Cryptol}
+  \label{fig:test}
+\end{figure}
+
+Similar to proving correctness, we can check in Cryptol whether a property is
+satisfiable through the \emph{:sat} command. The command finds a satisfying input
+for the property using an off-the-shelf SAT solver. 
+Finding satisfying assignments are interesting in cryptography because it can
+be used to formulate attacks to the cryptographic protocol. Figure~\ref{fig:sat}
+provides an example of known plaintext attacks specified in Cryptol.
+Such a property would certainly have a satisfying assignment. The point, however,
+is that Cryptol should never be able to find that assignment in a feasible amount
+of time in order for the encryption function to be safe.
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    >> :sat (\key -> encrypt key msg == cipher)
+  \end{lstlisting}
+  \caption{Known Plaintext Attack in Cryptol}
+  \label{fig:sat}
+\end{figure}
+
+\section{Comparing Cryptol with Other Cryptographic Languages}
+
+Figure~\ref{fig:compare} compares Cryptol with CAO and cPLC, the languages we have
+covered in Section~\ref{sec:crypto_lang}. These two languages are chosen because,
+like Cryptol, they focus on cryptographic applications in general. As shown in the
+table, Cryptol is the only when that employs a functional programming style, and
+also the only one that faciliates formal verification. The other two languages,
+although both high-level languages, put a strong focus on performance of the
+implementations.
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|l | p{0.2\linewidth} | p{0.6\linewidth} |}
+      \hline
+      Language & Programming Paradigm & Features \\
+      \hline
+      Cryptol & Purely Functional  & high-level specification, formal verification \\
+      \hline
+      CAO~\cite{moss2010bridging} & Imperative & high-level specification, performance \\
+      \hline
+      cPLC~\cite{bangerter2011cplc} & Imperative & high-level specification, mathematical syntax, numerical libraries \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{Comparing Cryptographic Programming Languages}
+  \label{fig:compare}
+\end{figure}
+
 
 
 \newpage
