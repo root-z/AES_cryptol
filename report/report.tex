@@ -58,6 +58,64 @@
 
 \chapter{Introduction}
 
+The aim of this project is to investigate domain specific languages
+that enhance reliability of cryptographic algorithms. The focus of this
+work is on Cryptol, however other languages with similar facilities will
+also be covered as related works.
+
+\begin{figure}[h]
+  \centering
+\begin{tabular}{| l | p{5cm} |}
+  \hline
+  May 25th - June 2nd: & Surveying Cyptol and similar languages \\
+  \hline
+  June 2nd - June 9th: & In-depth investigation of Cryptol's design and theory \\
+  \hline
+  June 9th - June 23rd: & Implementing AES algorithm in Cryptol \\
+  \hline
+  June 23rd - July 30th: & Verification of implementaion using Cryptol and SAW. \\
+  \hline
+  July 30th - July 7th: & Finishing up evaluation and writing report \\
+  \hline
+  July 7th - July 14th: & Preparing for presentation \\
+  \hline
+\end{tabular}
+\caption{Time Line of The Project}
+\label{fig:time}
+\end{figure}
+
+
+Therefore the first part of the project will be a brief survey of Cryptol
+and similar languages. This part will also cover high-level design of
+the Cryptol language and theory behind its functions for formal verification.
+
+The second part of the project will be empirical study of the Cryptol language
+with an implementation.
+For the implementation part, the AES symmetric-key algorithm
+\cite{standard2001announcing, bertoni2002efficient} is to be implemented
+ and properties related to the algorithm will be defined and checked
+in Cryptol to evaluate whether the language can efficiently verify
+the implementation. AES is chosen because it is the modern standard
+for symmetric-key encryption is widely used. 
+The focus in this part is the evaluation of the language,
+rather than actual implementation of the algorithm, therefore other
+algorithms written in Cryptol, if available, will
+also be used to conduct empirical evaluations.
+
+Another tool provided as a part of the Cryptol project is called
+The Software Analysis Workbench (SAW). SAW also provides formal verification
+for properties of programs written in Cryptol.
+SAW utilizes symbolic execution to translate programs into formal models.
+This tool will also be used to verify the AES implementation in Cryptol
+in order to see if it provides better functionalities for verification.
+
+Figure~\ref{fig:time} provides a time frame for the project. This is just
+a rough estimation, but the project will follow the steps specified.
+As mentioned before, because the focus is investigation
+of the Cryptol language, more time will be spent on evaluating the language
+functionalities. 
+
+
 \section{Organizations}
 
 \newpage
@@ -314,6 +372,32 @@ of time in order for the encryption function to be safe.
   \label{fig:sat}
 \end{figure}
 
+\section{How Formal Verification Works in Cryptol}
+
+Under the hood, the Cryptol source is translated to a \emph{symbolic bit-vector} language,
+for which there are existing methods that can the decide if the code segments satisfies
+a certain property. Translation is done through symbolic evaluation,
+by executing the function in question with symbolic variables.
+
+The symbolic bit-vector program can be reduced to a SAT (boolean satisfiability)
+instance and solved with an
+off-the-shelf SAT solver such as \emph{lingeling}. For checking equivalence property
+such as the one in Figure~\ref{fig:property}, we ask the SAT solver if there exists
+an assignment that would make the property return 0 (false). If there is, then the
+property does not hold, and part of the assignment will be translated to an input
+and returned as counterexample for the property. The SAT-based property checking
+approach has been used to prove equivalence of Cryptol program before and after
+compiler optimization~\cite{erkok2009pragmatic}.
+
+Cryptol also supports using SMT (satisfiability modulo theory)
+solvers in place of SAT solvers to decide the
+bit-vector programs. The reason why SMT solvers might be better than SAT solvers
+in this case is that they tend to natively support higher-level structural information
+and arithmetic operations better than SAT solvers. Many SMT solvers come with dedicated
+mode for bit-vector programs. In practice, it was found that SMT solvers work better
+when proving properties that involve algebraic equalities.
+
+
 \section{Comparing Cryptol with Other Cryptographic Languages}
 
 Figure~\ref{fig:compare} compares Cryptol with CAO and cPLC, the languages we have
@@ -346,73 +430,32 @@ implementations.
 
 \newpage
 
-\chapter{Implementation and Empirical Evaluation}
+\chapter{Implementation and Evaluation}
 
-This section presents the implementation part of the project. 
+This section presents the implementation part of the project. For the purpose of
+empirically evaluating the Cryptol language in practice, we created an implementation
+of the AES algorithm and devised properties to verify the implementation.
+The AES algorithm is the current standard of symmetric key
+encryption and is well specified in~\cite{standard2001announcing}. A brief introduction
+to the algorithm and the implementation is provided in Section~\ref{sec:aes}.
+The correctness properties and results of verification is dicussed in
+Section~\ref{sec:correct}. In Section~\ref{sec:review} we summarize the observations
+of the language from the implementation process. 
 
-\section{Design}
+\section{The AES Algorithm}
+\label{sec:aes}
 
-\section{High Assurance Programming with Cryptol}
+We provide a brief introduction to the AES algorithm in the section to faciliate our
+discuss of the implementation. 
 
+\section{Proving Correctness of the AES algorithm}
+\label{sec:correct}
 % The plan has been realized successfully without hiccups.
 % Followed the schedules. 
 
-The aim of this project is to investigate domain specific languages
-that enhance reliability of cryptographic algorithms. The focus of this
-work is on Cryptol, however other languages with similar facilities will
-also be covered as related works.
+\section{Review of the Cryptol Language}
+\label{sec:review}
 
-\begin{figure}[h]
-  \centering
-\begin{tabular}{| l | p{5cm} |}
-  \hline
-  May 25th - June 2nd: & Surveying Cyptol and similar languages \\
-  \hline
-  June 2nd - June 9th: & In-depth investigation of Cryptol's design and theory \\
-  \hline
-  June 9th - June 23rd: & Implementing AES algorithm in Cryptol \\
-  \hline
-  June 23rd - July 30th: & Verification of implementaion using Cryptol and SAW. \\
-  \hline
-  July 30th - July 7th: & Finishing up evaluation and writing report \\
-  \hline
-  July 7th - July 14th: & Preparing for presentation \\
-  \hline
-\end{tabular}
-\caption{Time Line of The Project}
-\label{fig:time}
-\end{figure}
-
-
-Therefore the first part of the project will be a brief survey of Cryptol
-and similar languages. This part will also cover high-level design of
-the Cryptol language and theory behind its functions for formal verification.
-
-The second part of the project will be empirical study of the Cryptol language
-with an implementation.
-For the implementation part, the AES symmetric-key algorithm
-\cite{standard2001announcing, bertoni2002efficient} is to be implemented
- and properties related to the algorithm will be defined and checked
-in Cryptol to evaluate whether the language can efficiently verify
-the implementation. AES is chosen because it is the modern standard
-for symmetric-key encryption is widely used. 
-The focus in this part is the evaluation of the language,
-rather than actual implementation of the algorithm, therefore other
-algorithms written in Cryptol, if available, will
-also be used to conduct empirical evaluations.
-
-Another tool provided as a part of the Cryptol project is called
-The Software Analysis Workbench (SAW). SAW also provides formal verification
-for properties of programs written in Cryptol.
-SAW utilizes symbolic execution to translate programs into formal models.
-This tool will also be used to verify the AES implementation in Cryptol
-in order to see if it provides better functionalities for verification.
-
-Figure~\ref{fig:time} provides a time frame for the project. This is just
-a rough estimation, but the project will follow the steps specified.
-As mentioned before, because the focus is investigation
-of the Cryptol language, more time will be spent on evaluating the language
-functionalities. 
 
 \newpage
 \chapter{Conclusion and Future Works}
