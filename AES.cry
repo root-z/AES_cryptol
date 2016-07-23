@@ -22,9 +22,9 @@ type KeySize = (NColumns * 32)
 
 // The Galois field GF(2^^n)
 type Field = [8]
-// a state in AES is a 4*4 matrix of 8-bit keys
+// a state in AES is a 4*4 matrix of 8-bit words, it is the basic unit of encryption
 type State = [4][NBlocks]Field
-// Each round key is the same as state
+// Each round key is the same size as state
 type RoundKey = State 
 
 type KeySchedule = (RoundKey, [NRounds - 1]RoundKey, RoundKey) // for key expansion
@@ -42,6 +42,7 @@ irreducible = <| x^^8 + x^^4 + x^^3 + x + 1 |>
 // field multiplication
 fieldMul : (Field, Field) -> Field
 fieldMul (x, y) = pmod (pmult x y) irreducible
+
 
 // field exponentiation
 fieldPow : (Field, [8]) -> Field
@@ -67,15 +68,23 @@ fieldInverse x = if x == 0 then 0
 
 /*
  * Encryption functions
+ * There are 5 major operations:
+ * expandKey: for generating round keys from cipher key
+ * addRoundKey: combining roundKey with state
+ * subBytes: substituting bytes
+ * shiftRows: 
+ * mixColumns: mixing by matrix multiplication
+ * 
  */
 
-formByte : Field -> Field
-formByte b = b ^ (b >>> 4) ^ (b >>> 5) ^ (b >>> 6) ^ (b >>> 7) ^ c
+// affine transformation defined by AES standard
+affine : Field -> Field
+affine b = b ^ (b >>> 4) ^ (b >>> 5) ^ (b >>> 6) ^ (b >>> 7) ^ c
            where c = 0x63
 
 // subByte includes 2 operations: (multiplicative) inverse and formByte
 subByte : Field -> Field
-subByte byte = formByte ( fieldInverse byte)
+subByte byte = affine ( fieldInverse byte)
 
 // subBytes simply apply subByte to each byte in the block
 subBytes : State -> State
@@ -83,8 +92,8 @@ subBytes s = [ [ subByte b | b <- r ] | r <- s ]
 // for each row in state, and each byte in row, subByte b
 
 // sBox is a lookup table provided in the AES standard
-subByteTable : [256] Field
-subByteTable = [
+sBox : [256] Field
+sBox = [
      0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
      0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59,
      0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7,
@@ -113,10 +122,11 @@ subByteTable = [
 
 // a more efficient version of subByte, also used for verification
 subByte' : Field -> Field
-subByte' x = subByteTable @ x
+subByte' x = sBox @ x
 
+// more efficient subBytes
 subBytes' : State -> State
-subBytes' s = [ [ subByte b | b <- r ] | r <- s ]
+subBytes' s = [ [ subByte' b | b <- r ] | r <- s ]
 
 
 // shiftRows shifts the last three rows of the matrix to the left by 1, 2, 3.
@@ -124,16 +134,50 @@ shiftRows : State -> State
 shiftRows s = [ r <<< shift | r <- s
                             | shift <- [0 .. 3] ]
 
+// shift row i of s by j letters
+shiftSingleRow' : State -> [8] -> [8] -> State
+shiftSingleRow' s i j = [ if r == s @ i
+                         then r <<< j
+                         else r
+                         | r <- s ]
+
+// shifting row 0 to i
+shiftNRows' : State -> [8] -> State
+shiftNRows' s i =
+           if i >= 0
+           then shiftSingleRow' s i i
+           else s
+
+// different version of shiftRows
+shiftRows' : State -> State 
+shiftRows' s = shiftNRows' s 3
+
 // dot-product of 2 vectors over GF(2^8)
 dotProduct : {n} (fin n) => ([n]Field, [n]Field) -> Field
 dotProduct (xs, ys) = fieldSum [ fieldMul (x, y) | x <- xs
                                                  | y <- ys ]
+// appending elem to list
+append : {m, n} (fin m, fin n) => [m][n] -> [n] -> [m+1][n]
+append xs x = xs # [x]
+
+fieldMul' : Field -> Field -> Field
+fieldMul' x y = pmod (pmult x y) irreducible
+
+// different version of dot product
+dotProduct' : {n} (fin n) => ([n]Field, [n]Field) -> Field
+dotProduct' (xs, ys) =
+                 fieldSum
+                 [ fieldMul' x y
+                  | [x, y] <- l ]
+                  where l = transpose [xs, ys]
+
 // the product of 2 matrices
 matrixProduct : {n, m, k} (fin m) => ([n][m]Field, [m][k]Field) -> [n][k]Field
 matrixProduct (x, y) = [ rowProduct (r, y) | r <- x ]
                   where
                   rowProduct (a, bMatrix) = [ dotProduct (a, b) | b <- transpose bMatrix ]
 
+// mixColumns is a matrix multiplication with a predefined matrix
 mixColumns : State -> State
 mixColumns s = matrixProduct (m, s)
            where m = [ [2, 3, 1, 1],
@@ -168,7 +212,7 @@ subWord bs = [subByte' b | b <- bs]
 rotateWord : [4]Field -> [4]Field
 rotateWord xs = xs <<< 1
 
-
+// the main loop of key expansion algorithm
 nextWord : ([8], [4][8], [4][8]) -> [4][8]
 nextWord (i, prev, old) = old ^ mask
          where mask = if i % `NColumns == 0 // note the use of type variable
@@ -177,6 +221,7 @@ nextWord (i, prev, old) = old ^ mask
                            then subWord (prev)
                            else prev
 
+// use lazy evaluation to write an infinite list of round keys
 expandForever : [NColumns][4][8] -> [inf]RoundKey
 expandForever seed = [ transpose g | g <- groupBy`{4} keyWS ]
               where keyWS = seed # [ nextWord (i, prev, old)
@@ -185,6 +230,10 @@ expandForever seed = [ transpose g | g <- groupBy`{4} keyWS ]
                                    | old <- keyWS
                                    ]
 
+// finite version
+expandFinite : {a} (fin a) => [NColumns][4][8] -> [a]RoundKey
+expandFinite seed = take`{a} (expandForever seed)
+
 // expanding a single key into key schedules
 expandKey : [KeySize] -> KeySchedule
 expandKey key = (keys @ 0, keys @@ [1 .. (NRounds - 1)], keys @ `NRounds)
@@ -192,8 +241,10 @@ expandKey key = (keys @ 0, keys @@ [1 .. (NRounds - 1)], keys @ `NRounds)
                     seed = split (split key)
                     keys = expandForever seed
 
+// extracting round keys from keySchedule
 fromKeySchedule : KeySchedule -> [NRounds + 1][4][32]
-fromKeySchedule(f, ms, l) = [
+fromKeySchedule (f, ms, l) =
+                   [
                      formKeyWords (transpose k)
                    | k <- [f] # ms # [l]
                    ]
@@ -221,6 +272,7 @@ toState text = transpose (split (split text))
 fromState : State -> [128]
 fromState state = join (join (transpose state))
 
+last : {a, b} (fin a) => [a]b -> b
 last x = x ! 0
 
 /*
@@ -243,10 +295,12 @@ encrypt (plainText, key) = fromState (finalRound (lastKey, last (firstStates)))
  * mostly reverse of the encryption functions
  */
 
-reverseFormByte : Field -> Field
-reverseFormByte b = (b >>> 2) ^ (b >>> 5) ^ (b >>> 7) ^ d
+// reverse of affine function as defined in fips-197
+reverseAffine : Field -> Field
+reverseAffine b = (b >>> 2) ^ (b >>> 5) ^ (b >>> 7) ^ d
                  where d = 0x05
 
+// reverse of subBytes definition
 reverseSubBytes : State -> State
 reverseSubBytes state = [
                 [ reverseSubByte b | b <- r ]
@@ -254,7 +308,7 @@ reverseSubBytes state = [
                 ] 
                 where
                 reverseSubByte : Field -> Field
-                reverseSubByte b = fieldInverse (reverseFormByte b)
+                reverseSubByte b = fieldInverse (reverseAffine b)
 
 //reverse of shiftRows
 reverseShiftRows : State -> State
@@ -273,12 +327,14 @@ reverseMixColumns state = matrixProduct (m, state)
                             [0x0d, 0x09, 0x0e, 0x0b],
                             [0x0b, 0x0d, 0x09, 0x0e]]
 
+// reverse of a single round
 reverseSingleRound : (RoundKey, State) -> State
 reverseSingleRound (roundKey, state) =
                    reverseMixColumns
                         (addRoundKey (roundKey,
                                      reverseSubBytes (reverseShiftRows state)))
 
+// reverse of the final rounnd
 reverseFinalRound : (RoundKey, State) -> State
 reverseFinalRound (roundKey, state) =
                   addRoundKey (roundKey, reverseSubBytes (reverseShiftRows state))
