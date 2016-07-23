@@ -445,8 +445,86 @@ of the language from the implementation process.
 \section{The AES Algorithm}
 \label{sec:aes}
 
-We provide a brief introduction to the AES algorithm in the section to faciliate our
-discuss of the implementation. 
+We start by providing a brief introduction to the AES algorithm in the section
+to faciliate our discuss of the implementation.
+
+As a block cipher, the AES
+algorithm runs on a $4 \times 4$ column-major order matrix of bytes.
+The matrix is formally called a \emph{state} and it has a fixed size of 128 bits.
+See Figure~\ref{fig:state} for an example of states.
+
+\begin{figure}
+  \begin{center}
+    \begin{equation}
+      \begin{bmatrix}
+        b_0 & b_4 & b_8 & b_{12} \\
+        b_1 & b_5 & b_9 & b_{13} \\
+        b_2 & b_6 & b_{10} & b_{14} \\
+        b_3 & b_7 & b_{11} & b_{15} 
+      \end{bmatrix}
+    \end{equation}
+  \end{center}
+  \caption{A State in AES}
+  \label{fig:state}
+\end{figure}
+
+The other input that the algorithm takes is the encryption key, which can be 128, 192,
+or 256-bit long. In AES, a sequence of substitution and permutation steps are repeated
+for a number of rounds, and the number of rounds is decided by the key size.
+For 128-bit keys, 10 rounds of repetition is required, whereas 12 and 14 rounds are
+needed for 192-bit and 256-bit keys respectively. The number of rounds are needed
+to use the encryption key efficiently. More specifically, the algorithm does not
+simply reuse the encryption key for every round of operations. Instead, the key is
+expanded into (number of rounds + 1) round keys, which of 128 bits. The expansion
+is done using Rijndael's key schedule. This way a different round key is used in
+each round and there is no repetition. Note that because each entry in the state
+matrix is one byte, most arithmetic operations in Cryptol are defined over a finite
+field $GF(2^8)$ (GF stands for Galois Field).
+
+In brief there are 5 major functions used in AES:
+\begin{itemize}
+\item \emph{KeyExpansion}: for expanding encryption key to round keys, as we have
+  discussed before.
+\item \emph{AddRoundKey}: Applying round key to the state using bitwise \emph{xor}.
+\item \emph{SubBytes}: Substituting each byte in the state according to a lookup table
+  called the S-box.
+\item \emph{ShiftRows}: Shifting the last three rows of the state cyclically each by
+  different number of bytes.
+\item \emph{MixColumns}: Transform each column (treated as a polynomial on the field
+  $GF(2^8)$) through matrix multiplication.
+\end{itemize}
+
+We refer to~\cite{standard2001announcing} for more detailed description of these
+operations. Algorithm~\ref{alg:aes} shows the pseudo-code for the algorithm using the operations
+introduced.
+
+\begin{algorithm}
+  \caption{The AES Algorithm}
+  \label{alg:aes}
+  \begin{algorithmic}[1]
+    \State roundKeys = expandKey(key)
+    \State 
+    \Comment{roundKeys is an $n+1$ array where $n$ is the number of rounds.}
+    \State state = addRoundkey(state, roundKeys[0])
+
+    \For{i = $1$ to $n-1$ where $n$ is the number of rounds}
+    \State state = subBytes(state)
+    \State state = shiftRows(state)
+    \State state = mixColumns(state)
+    \State state = addRoundKey(state, roundKeys[i])
+    \EndFor
+
+    \State state = subBytes(state)
+    \State state = shiftRows(state)
+    \State state = addRoundKey(state, roundKeys[n])
+    \State \Comment{The last round does not involve the MixColumns operation.}
+
+    \State \Return state
+    
+  \end{algorithmic}
+\end{algorithm}
+
+
 
 \section{Proving Correctness of the AES algorithm}
 \label{sec:correct}
