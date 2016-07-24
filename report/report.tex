@@ -183,6 +183,8 @@ CAO~\cite{moss2010bridging}, a language designed to facilitate high-level,
 performant implementation of the AES algorithm. The CAO compiler utilises
 advanced techniques to improve performance of the implementation, but 
 provides no specific functions for verifying the correctness of the algorithm.
+There are seperate studies on verifying CAO programs such as~\cite{barbosa2010deductive},
+however the features are not included as a part of the language.
 Agosta et al.~\cite{agosta2007domain} also proposed a domain specific language
 for cryptography based on Python. The major benefit that this work provides,
 however, is syntactic.
@@ -737,17 +739,115 @@ that the implementation is correct.
 \section{Review of the Cryptol Language}
 \label{sec:review}
 
-if-else statement is often the only solution. The advantage of this is that the
+In this section we summarize our observations of the Cryptol language from the both
+ the literature survey and the implementation project. 
+
+First of all, Cryptol is a very unique solution to programming language for cryptograhpy.
+As we have seen in Section~\ref{sec:crypto_lang}, it is not the only language that have
+been designed specifically for cryptography. However Cryptol is the only pure functional
+language that has been proposed. Moreover, its native support for formal verificaiton is
+also unique. These features all make it stand out as a programming language for 
+cryptography.
+
+Specifying correctness properties in Cryptol is easy as the properties are eventually
+just functions. Verification is reasonably fast for most basic functions. 
+The precise type system also provides very good compiler-time guarantees: if the program 
+compiles, it can probably run without errors.
+
+The language also naturally promotes modularity and readability.
+The implementation of the AES algorithm in Cryptol, even after including multiple 
+versions of some functions, are still shorter than the equivalent implementation
+in C or Java. The size of the source code could be reduced even more should it be
+ desired. This however is not the purpose of the project, and therefore not attempted.
+The functional programming style works well for encryption and decryption algorithms
+as they are often by design pure functions.
+
+However as a relative young language, there are still a few caveats with the language.
+We discuss these issue below.
+
+\paragraph{Proving Polymorphic Properties}
+
+Cryptol does not support verifying properties with polymorphic types, because the 
+properties might hold for some type distances but not others. This however doesn't mean
+polymorphic types are useless in properties. It is just that when asking Cryptol
+to prove these properties, the developers must provide extra, monomorphic type
+signature for the prover to work.
+
+\paragraph{Branching}
+
+The if statement is often the only solution to writing conditions in Cryptol. 
+The advantage of this is that the
 algorithms specified in imperative style can often be translated with ease. However,
 whether this is a good language feature is a matter of debate. The language does
 provide pattern matching, however it is not as powerful as that in Haskell, and is
 used to only access components of data structures.
+A more powerful pattern matching feature like that of Haskell's is desirable.
+
+\paragraph{Lack of Support for Floating Point Number}
+
+Cryptol has no native support for floating-point number. This is in fact not a big 
+problem for many cryptographic algorithms, especially symmetric key cryptographic
+algorithms, as they operate primarily on integers defined over finite fields. 
+However floating-point number can be useful when experimenting advanced
+cryptographic algorithms, e.g. using elliptic curves.
+
+\paragraph{Limited Standard Library}
+
+As a language designed for cryptography, Cryptol's standard library lacks functions 
+that are common and useful for many cryptographic algorithms. 
+During the implementation project, it was often necessary to implement basic functions
+that are often seen in cryptography.
+Arithmetic operations 
+(addition, multiplication, exponentiation, etc.) on finite fields is one example. 
+The cPLC~\ref{bangerter2011cplc} language, for example, comes with support for a number
+ of mathematical functions that are useful for developing cryptographic algorithms.
+With rapid prototyping being one of the design objectives of the Cryptol language, 
+it would be a good idea to include basic number theoretical utilities in the 
+standard library.
 
 \newpage
 \chapter{Conclusion and Future Works}
 % The plan has been realized successfully without hiccups.
 % Followed the schedules. 
 
+In the project project proposal we set out a concrete schedule for the project.
+The project adhered to the schedule closely, and everything 
+that was planned in the proposal, including both the literature survey and 
+the implementation was completed on time.
+
+The project provided valuable insight to the language itself. From the survey
+and implementation we came to the conclusion that Cryptol is a plausible language 
+for cryptography, although there are still issues, such as a comprehensive standard 
+library, to be resolved for the language to gain traction. 
+
+The language has a lot of potential to be discovered. 
+One of the possibility discussed in~\ref{lewis2003cryptol} is that of compiling 
+the Cryptol source code into target languages and platforms such as C, Java, or
+even assembly. The Software Analysis Workbench (SAW), a tool developed by the same
+organization Galois Inc., also provides utility for proving equivalence of Cryptol 
+functions and Java or C functions. 
+This means that the Cryptol implementation of an algorithm can be used to verify 
+implementations in other languages. It is however not as easy as it sounds, 
+as the equivalence checking is only possible when the function design (signature etc.)
+is similar in these language. That is not necessarily the case as Cryptol
+is a functional language, whereas C and Java are imperative, and object-oriented.
+Therefore whether the SAW toolset can be used to effectively verify C and Java source
+code is matter to be investigated.
+
+
+
+
+Even if a cryptographic algorithm is proved to be correct based on a certain 
+specificaiton, it still does
+not mean that the algorthm is secure. 
+At the moment, there is no way to prove security in Cryptol, 
+which is not an actual problem of the language. 
+Automated proof for security is a hard problem with no general solution, 
+especially when there are many different notions of security such as 
+IND-CPA (indistinguishability under chosen plaintext attack) and 
+IND-CCA (indistinguishability under chosen ciphertext attack).
+This is simply something for developers to keep in mind, and can perhaps
+be an interesting topic of research.
 
 
 \newpage
