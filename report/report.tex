@@ -495,8 +495,12 @@ In brief there are 5 major functions used in AES:
 \end{itemize}
 
 We refer to~\cite{standard2001announcing} for more detailed description of these
-operations. Algorithm~\ref{alg:aes} shows the pseudo-code for the algorithm using the operations
+operations. Algorithm~\ref{alg:aes} shows the pseudo-code for the algorithm using
+the operations
 introduced.
+The decryption function is simply the reverse of the encryption function, and
+is made up of operations and rounds that reverse the operations and rounds of
+the encryption function.
 
 \begin{algorithm}
   \caption{The AES Algorithm}
@@ -525,18 +529,224 @@ introduced.
 \end{algorithm}
 
 
+\section{Implementation Details}
 
-\section{Proving Correctness of the AES algorithm}
+% techniques
+
+We present below a few language features that are prominently used in our
+implementation.
+
+\paragraph{Type Synonyms}
+
+Remember that size of input is specified in the type signature.
+In Cryptol, we can define type synonyms to improve reusability and readability,
+just like in Haskell.
+The major data structures in AES are defined as type synonyms in Cryptol in our
+implementation.
+Remember that a State in Cryptol is a $4 \times 4$ matrix of bytes. An example
+of the State type is shown in Figure~\ref{fig:typedef}.
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    type State = [4][4][8]
+  \end{lstlisting}
+  \caption{Defining the State type in Cryptol}
+  \label{fig:typedef}
+\end{figure}
+
+
+\paragraph{Fold}
+
+As a functional programming language, Cryptol provides no supports for writing
+for-loop or
+while-loop. The only natural way of writing a loop in Cryptol, besides recursive
+functions is \emph{fold}.
+In functional programming, fold is a way to recursively analyze a data structure
+such as a list, combine the results of each iteration and accumulatively build up
+a return value.
+See Figure~\ref{fig:fold} for an example of loops written with \emph{fold} in
+Cryptol.
+This is a function that computes the sum of the list \emph{xs}.
+Note that the variable \emph{ys} is used in its in own definition.
+This is similar to a \emph{foldr} function in Haskell~\cite{lipovaca2011learn}.
+The result, however, in this case is a list that includes the value of each
+intermediate step.
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    xs = [1 .. 10] // a list of numbers
+    ys = [0] # [ y + x | x <- xs 
+                       | y <- ys ]
+    // ys = [0, 1, 3, ..., 55]
+  \end{lstlisting}
+  \caption{A Loop Written in Fold in Cryptol}
+  \label{fig:fold}
+\end{figure}
+
+Folds are the recommended way of writing loops in Cryptol, and therefore are
+frequently used in our implementation.
+
+% list of functions
+
+\section{Implementation and Verification}
 \label{sec:correct}
-% The plan has been realized successfully without hiccups.
-% Followed the schedules. 
+
+Using a pure functional language such as Cryptol to implement the AES algorithm,
+fortunately does not result in any complications more than necessary. Each major
+operation can be implemented as a pure function, i.e. one that is free of side
+effects, and of course the eventual encryption and decryption functions are also
+side-effect free.
+
+In Figure~\ref{fig:functions} we list type signatures of the major functions
+in AES. This provides a high-level overview of our implementation. Note how
+well this corresponds to the description of AES in Section~\ref{sec:aes}.
+All the major operations transform \emph{State} type. The encryption and decryption
+function works on 128-bit plain text, and takes as input a key that is either
+128, 192, or 256-bit long. Of course these are not the only functions and types in
+the implementation. There are many more helper functions such as those for computing
+multiplicative inverse on a finite field and for matrix multiplication.
+We also implement multiple versions of the same function where possible, so that
+these different versions can be used to verify each other. This is conducted
+under the assumption the under the correct specification, the same mistake is
+unlikely to be made in two different versions.
+
+\begin{figure}
+  \begin{lstlisting}[frame=single]
+    type State = [4][4][8]
+    type RoundKey = State
+    type KeySize = 128    // 192, 256
+
+    // encryption functions
+    subBytes : State -> State
+    shiftRows: State -> State
+    mixColumns: State -> State
+    addRoundKey: RoundKey -> State -> State
+    encrypt: [128] -> [KeySize] -> [128]
+
+    // decryption functions
+    reverseSubBytes: State -> State
+    reverseShiftRows: State -> State
+    reverseMixColumns: State -> State
+    decrypt: [128] -> [KeySize] -> [128]
+    
+  \end{lstlisting}
+  \caption{Function Signatures of Major AES Operations}
+  \label{fig:functions}
+\end{figure}
+
+The next step after implementation is naturally verifying our implementation.
+This is however not as straight-forward as the example shown in
+Figure~\ref{fig:property}, because high-level properties defined directly over
+the encryption and decryption functions generally take too long to prove.
+This is likely because the AES algorithm has an intentionally large state space,
+and the purpose of the algorithm is to obfuscate and make it computationally impossible
+to analyze the relationship between the input and the output.
+Therefore instead of verifying the encryption and decryption functions as a whole,
+we adopt a different strategy: verify each component of the algorithm separately.
+As the composition of components is pretty straight-forward for AES, this approach
+would provide strong guarantee that the implementation is correct.
+
+A set of correctness properties are defined in order to verify the implementation.
+These properties for functions are designed using the three strategies:
+\begin{itemize}
+\item Verifying important properties instrinsic to the functions;
+\item Verifying equivalence of different versions of the same function;
+\item Verifying that the reverse functions successfully undo the encrypt functions
+\end{itemize} 
+
+Many of the basic functions have important properties that can be used to verify
+them, and many of these properties can be proved efficiently. For example, the
+product of a number and its multiplicative inverse on a finite field equals to 1.
+This property is defining characteristic of multiplicative inverse and can be used
+to verify the function. Similarly we verify commutativity and associativity for
+finite field multiplication.
+
+Moreover, the AES specification sometimes provide optimization such as look-up table
+that replaces computation steps. We implement some of these optimizations and
+ask Cryptol to check equivalence of the optimized and original functions. This is
+the approach taken for functions such as \emph{subBytes}.
+
+Another way to ensure correctness is make sure that reverse operations used in the
+decryption function can actually cancel out their corresponding operations in
+the encryption function. This is approach is used to verify \emph{shiftRows} for
+example.
+
+In complement with formal verification, we use the automated testing utility
+provided in Cryptol to test the properties that are defined, especially when the
+properties could not be proved in a feasible amount of time.
+
+Figure~\ref{fig:properties} summarizes the result of the formal verification process.
+The result is largely positive: most of the properties can be efficiently proved,
+while the rest passed the automated tests at least. This gives us a strong confidence
+that the implementation is correct.
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|p{0.25\linewidth} | p{0.5\linewidth} | p{0.15\linewidth} |}
+      \hline
+      Property & Description & Result \\
+      \hline
+      \emph{polySelfAdd} & the sum of two same polynomials on $GF(2^*)$ is 0
+      & proved \\
+      \hline
+      \emph{mulIden} & any number multiplied with the identity element over
+      the field equals the number itself & proved \\
+      \hline
+      \emph{mulCommutative} & commutative property of field multiplication
+      & proved \\
+      \hline
+      \emph{mulAssociate} & associative property of field multiplication
+      & proved \\
+      \hline
+      \emph{mulInverseCorrect} & multiplicative inverse's definition
+      & proved \\
+      \hline
+      \emph{subByteCorrect} & two versions of subBytes are equivalent
+      & proved \\
+      \hline
+      \emph{shiftRowsCorrect} & \emph{shiftRows} applied 4 times results in the original state
+      & proved \\
+      \hline
+      \emph{rConCorrect} & two versions of round constants are equivalent
+      & tested \\
+      \hline
+      \emph{formByteCorrect} & verify \emph{formByte} against its reverse function
+      & proved \\
+      \hline
+      \emph{toFromStateCorrect} &  toState is the reverse of fromState
+      & proved \\
+      \hline
+      \emph{reverseShiftRows} & verify \emph{shiftRows} against its reverse function
+      & proved \\
+      \hline
+      \emph{mixColumnsCorrect} & verify \emph{mixColumns} against its reverse function
+      & tested \\
+      \hline
+      \emph{aesCorrect} & decrypt (encrypt (m, k), k) == m
+      & tested \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{Correctness Properties and Results of Verification}
+  \label{fig:properties}
+\end{figure}
+
+
+
 
 \section{Review of the Cryptol Language}
 \label{sec:review}
 
+if-else statement is often the only solution. The advantage of this is that the
+algorithms specified in imperative style can often be translated with ease. However,
+whether this is a good language feature is a matter of debate. The language does
+provide pattern matching, however it is not as powerful as that in Haskell, and is
+used to only access components of data structures.
 
 \newpage
 \chapter{Conclusion and Future Works}
+% The plan has been realized successfully without hiccups.
+% Followed the schedules. 
 
 
 
