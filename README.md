@@ -8,6 +8,8 @@ To run the Cryptol source code, you need to first install Cryptol.
 There are two steps.
 
 1. Install Cryptol
+2. Install Z3
+
 If you are on a recent version of Ubuntu, run:
    sudo apt-get install cryptol
 
@@ -19,7 +21,6 @@ To run Cryptol, simply run the cryptol file in the bin folder of binary files.
 Or directly enter "cryptol" in your command prompt if the binary is on
 the path.
 
-2. Install Z3
 Cryptol's formal verification utilities depend on the Z3 solver by default.
 Run "sudo apt-get install z3" to get Z3 on Ubuntu.
 Otherwise get it from https://github.com/Z3Prover/z3/releases.
