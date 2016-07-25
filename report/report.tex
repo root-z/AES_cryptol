@@ -47,14 +47,14 @@
 \maketitle
 \begin{abstract}
 
-  Implementing reliable security protocols is a difficult task, and
+  Implementing reliable cryptographic protocols is a difficult task, and
   the Cryptol language is an attempt at using programming language to
   improve reliability of cryptographic implementations. The language
   provides interesting features such as a powerful type system, and
   native support for formal verification. In this study we evaluate
   Cryptol through the combination of a literature survey and an implementation
   project. We conclude that Cryptol language is well suited for
-  cryptography, although it still has a long way to go to be a practical
+  cryptography, although it still has a long way to go to become a practical
   language. 
   
 \end{abstract}
@@ -80,7 +80,7 @@ protocols with the necessary level of precision and precaution.
 Simple mistakes such as failing to validate input, or reusing keys could
 compromise the security of the entire system.
 Moreover, recent cryptographic algorithms are often only specified in
-academic publications, which rightly focus on the background theory and security
+academic publications, which by nature focus on the background theory and security
 proofs of the protocols, instead of implementation details.
 Even if the protocol follows the specification, the system must still be secured
 against side-channel attacks.
@@ -113,12 +113,12 @@ as useful tools for enhancing cryptographic implementation, and what language
 features are important for cryptography.
 We discuss our approach and contributions below.
 
-\paragraph{Organizations and Contributions}
+\paragraph{Organization and Contributions}
 
 This project involves two major components. The first part of the project
 is a literature survey, presented in Chapter~\ref{chap:survey}.
 We introduce the essential features such as the type system of the Cryptol language
-and the theory behind its formal verification utilities in this section.
+and the theory behind its formal verification utilities in this chapter.
 Furthermore, we cover other domain specific languages and related tools for
 cryptography extensively and compare these languages with Cryptol.
 This part of the project not only serves as the foundation for further discussion,
@@ -158,8 +158,8 @@ As has been mentioned before, Cryptol is a high-level programming language
 designed for cryptography. It provides a formal methods-based approach
 to cryptographic developments.
 
-The Cryptol language offers several benefits to development of cryptographic
-protocols:
+The Cryptol language is designed with several objectives in mind:
+
 \begin{itemize}
 \item Cryptol is designed to be the standard language of cryptography
 \item The Cryptol language provides high assurance of the correctness
@@ -180,12 +180,12 @@ of the algorithms.
 This means that the language allows for algorithms specified in academic
 papers and standards to be translated into Cryptol source code in a manner that
 is straightforward and readable.
-Moreover, Cryptol frees developers from machine level detail
+Moreover, Cryptol frees developers from machine level details
 so that they could focus on developing new algorithms.
 
 To achieve this goal, Cryptol is designed to be a pure functional programming
 language similar to Haskell. The Cryptol syntax, just like Haskell's, is
-heavily inspired mathematical notations, and therefore can express computations
+heavily inspired by mathematical notations, and therefore can express computations
 in cryptographic protocols easily.
 It is also argued that functional programs
 are usually shorter and easier to understand.
@@ -197,8 +197,8 @@ that the program is well-structured.
 \subsection{High Assurance Programming}
 
 To serve as authoritative specifications, Cryptol programs need
-to be correct first. Cryptol comes with several features that provides strong
-guarantees of correctness of functions:
+to be correct first. Cryptol comes with several features that provide strong
+guarantee of the correctness of functions:
 \begin{itemize}
 \item Type System
 \item Formal Verification 
@@ -210,7 +210,7 @@ guarantees of correctness of functions:
 Cryptol uses a type system based on the Hindley-Milner
 type system~\cite{hindley1969principal}, extend with size-polymorphism
 and arithmetic type predicates~\cite{lewis2003cryptol}. The type system
-is designed capture constraints that naturally arise from cryptographic
+is designed to capture constraints that naturally arise from cryptographic
 algorithms such as fixed-size keys and input blocks.
 
 \begin{figure}
@@ -229,7 +229,7 @@ by the predicates $ 0 < n$ and $n < 3$. The predicates put a limit on the
 values of the type variable. Any arithmetic operations can be used in
 such predicates.
 Type signatures of these kinds rule out a large number of illegal input
-statically and provides strong guarantees to the correctness of the program.
+statically and provides strong guarantee to the correctness of the program.
 The AES algorithm~\cite{standard2001announcing} for example operates on 128, 192
 or 256-bit keys. Such a constraint can precisely specified and checked in
 Cryptol type system.
@@ -239,7 +239,7 @@ Cryptol type system.
 The Cryptol language provides native formal verification utilities designed for
 equivalence and safety-checking. Correctness properties can be specified in Cryptol
 as part of the source code accompanying the algorithm. The Cryptol checker then
-checks for correctness of property with the SAT/SMT solvers. The Z3 prover is used
+checks for correctness of properties by means of SAT/SMT solvers. The Z3 prover is used
 by default.
 
 Figure~\ref{fig:property} shows a correctness property defined in Cryptol. The
@@ -324,8 +324,8 @@ of time in order for the encryption function to be safe.
 \subsection{How Formal Verification Works in Cryptol}
 
 Under the hood, the Cryptol source is translated to a \emph{symbolic bit-vector} language,
-for which there are existing methods that can the decide if the code segments satisfies
-a certain property. Translation is done through symbolic evaluation,
+for which there are existing methods that can then decide if the code segments satisfies
+a certain property. Translation is done through symbolic evaluation, i.e.
 by executing the function in question with symbolic variables.
 
 The symbolic bit-vector program can be reduced to a SAT (boolean satisfiability)
@@ -352,11 +352,11 @@ when proving properties that involve algebraic equalities.
 \label{sec:crypto_lang}
 
 The idea of using language features to enhance cryptographic applications 
-have been investigated for over a decade. Some works, such 
+have been investigated for over a decade. Some studies, such 
 as \cite{akinyele2013charm} builds upon existing languages, and provides
 extensions, e.g. libraries and frameworks, for efficient implementation 
 of cryptographic protocols. 
-Other studies~\cite{lewis2003cryptol} create brand-new domain specific 
+Other like Cryptol~\cite{lewis2003cryptol} create brand-new domain specific 
 programming languages dedicated to cryptographic applications. These
 works also focus on different aspects of implementation. Some focus
 on reliability and correctness guarantees, while others emphasize ease 
@@ -433,10 +433,10 @@ We refer to~\cite{meadows1994formal} for these works.
 
 \paragraph{Comparing Cryptol with Other Cryptographic Languages}
 
-Figure~\ref{fig:compare} compares Cryptol with CAO and cPLC, the languages we have
+Figure~\ref{fig:compare} compares Cryptol with CAO and cPLC, two of the languages we have
 covered in Section~\ref{sec:crypto_lang}. These two languages are chosen because,
 like Cryptol, they focus on cryptographic applications in general. As shown in the
-table, Cryptol is the only when that employs a functional programming style, and
+table, Cryptol is the only one that employs a functional programming style, and
 also the only one that facilitates formal verification. The other two languages,
 although both high-level languages, put a strong focus on performance of the
 implementations.
@@ -509,7 +509,8 @@ For 128-bit keys, 10 rounds of repetition is required, whereas 12 and 14 rounds 
 needed for 192-bit and 256-bit keys respectively. The number of rounds are needed
 to use the encryption key efficiently. More specifically, the algorithm does not
 simply reuse the encryption key for every round of operations. Instead, the key is
-expanded into (number of rounds + 1) round keys, which of 128 bits. The expansion
+expanded into (\emph{number of rounds } + 1) round keys, each of which is 128 bits. 
+The expansion
 is done using Rijndael's key schedule. This way a different round key is used in
 each round and there is no repetition. Note that because each entry in the state
 matrix is one byte, most arithmetic operations in Cryptol are defined over a finite
@@ -636,14 +637,14 @@ side-effect free.
 In Figure~\ref{fig:functions} we list type signatures of the major functions
 in AES. This provides a high-level overview of our implementation. Note how
 well this corresponds to the description of AES in Section~\ref{sec:aes}.
-All the major operations transform \emph{State} type. The encryption and decryption
-function works on 128-bit plain text, and takes as input a key that is either
+All the major operations transform the \emph{State} type. The encryption and decryption
+functions work on 128-bit plain text, and takes as input a key that is either
 128, 192, or 256-bit long. Of course these are not the only functions and types in
 the implementation. There are many more helper functions such as those for computing
 multiplicative inverse on a finite field and for matrix multiplication.
 We also implement multiple versions of the same function where possible, so that
 these different versions can be used to verify each other. This is conducted
-under the assumption the under the correct specification, the same mistake is
+under the assumption that with the correct specification, the same mistake is
 unlikely to be made in two different versions.
 
 \begin{figure}
@@ -670,7 +671,7 @@ unlikely to be made in two different versions.
   \label{fig:functions}
 \end{figure}
 
-The next step after implementation is naturally verifying our implementation.
+The next step  is naturally verifying our implementation.
 This is however not as straight-forward as the example shown in
 Figure~\ref{fig:property}, because high-level properties defined directly over
 the encryption and decryption functions generally take too long to prove.
@@ -693,7 +694,7 @@ These properties for functions are designed using the three strategies:
 Many of the basic functions have important properties that can be used to verify
 them, and many of these properties can be proved efficiently. For example, the
 product of a number and its multiplicative inverse on a finite field equals to 1.
-This property is defining characteristic of multiplicative inverse and can be used
+This property is the defining characteristic of multiplicative inverse and can be used
 to verify the function. Similarly we verify commutativity and associativity for
 finite field multiplication.
 
@@ -804,7 +805,7 @@ We discuss these issue below.
 \paragraph{Proving Polymorphic Properties}
 
 Cryptol does not support verifying properties with polymorphic types, because the 
-properties might hold for some type distances but not others. This however doesn't mean
+properties might hold for some type instances but not others. This however doesn't mean
 polymorphic types are useless in properties. It is just that when asking Cryptol
 to prove these properties, the developers must provide extra, monomorphic type
 signature for the prover to work.
@@ -813,7 +814,7 @@ signature for the prover to work.
 
 The if statement is often the only solution to writing conditions in Cryptol. 
 The advantage of this is that the
-algorithms specified in imperative style can often be translated with ease. However,
+algorithms specified in an imperative style can often be translated with ease. However,
 whether this is a good language feature is a matter of debate. The language does
 provide pattern matching, however it is not as powerful as that in Haskell, and is
 used to only access components of data structures.
@@ -824,8 +825,8 @@ A more powerful pattern matching feature like that of Haskell's is desirable.
 Cryptol has no native support for floating-point number. This is in fact not a big 
 problem for many cryptographic algorithms, especially symmetric key cryptographic
 algorithms, as they operate primarily on integers defined over finite fields. 
-However floating-point number can be useful when experimenting advanced
-cryptographic algorithms, e.g. using elliptic curves.
+However floating-point number can be useful when experimenting on advanced
+public key cryptographic algorithms, e.g. those using elliptic curves.
 
 \paragraph{Limited Standard Library}
 
@@ -835,7 +836,7 @@ During the implementation project, it was often necessary to implement basic fun
 that are often seen in cryptography.
 Arithmetic operations 
 (addition, multiplication, exponentiation, etc.) on finite fields is one example. 
-The cPLC~\ref{bangerter2011cplc} language, for example, comes with support for a number
+The cPLC~\cite{bangerter2011cplc} language, for example, comes with support for a number
  of mathematical functions that are useful for developing cryptographic algorithms.
 With rapid prototyping being one of the design objectives of the Cryptol language, 
 it would be a good idea to include basic number theoretical utilities in the 
@@ -847,14 +848,14 @@ standard library.
 % The plan has been realized successfully without hiccups.
 % Followed the schedules. 
 
-In the project project proposal we set out a concrete time frame for the project.
+In the project proposal we set out a concrete time frame for the project.
 The project adhered to the schedule closely, and everything 
 that was planned in the proposal, including both the literature survey and 
 the implementation was completed on time.
 A large number of properties that were devised were successfully proved on
 the implementation. The rest also passed the automated tests at least.
 
-More importantly, the project provided valuable insight to the language itself.
+More importantly, the project provides valuable insight to the language itself.
 From the survey
 and implementation we came to the conclusion that Cryptol is a plausible language 
 for cryptography.
@@ -867,7 +868,8 @@ library, to be resolved for the language to gain traction.
 As a relatively young language, Cryptol has a lot of potential to be developed. 
 One of the possibility discussed in~\cite{lewis2003cryptol} is that of compiling 
 the Cryptol source code into target languages and platforms such as C, Java, or
-even assembly. The Software Analysis Workbench (SAW), a tool developed by the same
+even assembly. This however is not supported in the current version of Cryptol.
+The Software Analysis Workbench (SAW), a tool developed by the same
 organization Galois Inc., also provides utility for proving equivalence of Cryptol 
 functions and Java or C functions. 
 Similar to Cryptol's property prover. SAW utilizes symbolic execution to
