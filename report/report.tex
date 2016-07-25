@@ -58,32 +58,15 @@
 
 \chapter{Introduction}
 
+Cryptographic protocols are used everywhere nowadays. Google, for example,
+recently claimed in its transparency report that 75\% of the requests to
+its servers are now encrypted.
+
+
 The aim of this project is to investigate domain specific languages
 that enhance reliability of cryptographic algorithms. The focus of this
 work is on Cryptol, however other languages with similar facilities will
 also be covered as related works.
-
-\begin{figure}[h]
-  \centering
-\begin{tabular}{| l | p{5cm} |}
-  \hline
-  May 25th - June 2nd: & Surveying Cyptol and similar languages \\
-  \hline
-  June 2nd - June 9th: & In-depth investigation of Cryptol's design and theory \\
-  \hline
-  June 9th - June 23rd: & Implementing AES algorithm in Cryptol \\
-  \hline
-  June 23rd - July 30th: & Verification of implementaion using Cryptol and SAW. \\
-  \hline
-  July 30th - July 7th: & Finishing up evaluation and writing report \\
-  \hline
-  July 7th - July 14th: & Preparing for presentation \\
-  \hline
-\end{tabular}
-\caption{Time Line of The Project}
-\label{fig:time}
-\end{figure}
-
 
 Therefore the first part of the project will be a brief survey of Cryptol
 and similar languages. This part will also cover high-level design of
@@ -102,21 +85,9 @@ rather than actual implementation of the algorithm, therefore other
 algorithms written in Cryptol, if available, will
 also be used to conduct empirical evaluations.
 
-Another tool provided as a part of the Cryptol project is called
-The Software Analysis Workbench (SAW). SAW also provides formal verification
-for properties of programs written in Cryptol.
-SAW utilizes symbolic execution to translate programs into formal models.
-This tool will also be used to verify the AES implementation in Cryptol
-in order to see if it provides better functionalities for verification.
-
-Figure~\ref{fig:time} provides a time frame for the project. This is just
-a rough estimation, but the project will follow the steps specified.
-As mentioned before, because the focus is investigation
-of the Cryptol language, more time will be spent on evaluating the language
-functionalities. 
+\section{Organizations and Contributions}
 
 
-\section{Organizations}
 
 \newpage
 \chapter{Literature Survey}
@@ -810,34 +781,42 @@ standard library.
 % The plan has been realized successfully without hiccups.
 % Followed the schedules. 
 
-In the project project proposal we set out a concrete schedule for the project.
+In the project project proposal we set out a concrete time frame for the project.
 The project adhered to the schedule closely, and everything 
 that was planned in the proposal, including both the literature survey and 
 the implementation was completed on time.
+A large number of properties that were devised were successfully proved on
+the implementation. The rest also passed the automated tests at least.
 
-The project provided valuable insight to the language itself. From the survey
+More importantly, the project provided valuable insight to the language itself.
+From the survey
 and implementation we came to the conclusion that Cryptol is a plausible language 
-for cryptography, although there are still issues, such as a comprehensive standard 
+for cryptography.
+The language allows for very high-level specification of algorithms.
+The native support for formal verification is very useful
+for development of cryptographic algortihms. The precise type system is also 
+helpful. However there are still issues, such as the lack of a comprehensive standard 
 library, to be resolved for the language to gain traction. 
 
-The language has a lot of potential to be discovered. 
-One of the possibility discussed in~\ref{lewis2003cryptol} is that of compiling 
+As a relatively young language, Cryptol has a lot of potential to be developed. 
+One of the possibility discussed in~\cite{lewis2003cryptol} is that of compiling 
 the Cryptol source code into target languages and platforms such as C, Java, or
 even assembly. The Software Analysis Workbench (SAW), a tool developed by the same
 organization Galois Inc., also provides utility for proving equivalence of Cryptol 
 functions and Java or C functions. 
+Similar to Cryptol's property prover. SAW utilizes symbolic execution to
+translate programs into formal models.
 This means that the Cryptol implementation of an algorithm can be used to verify 
 implementations in other languages. It is however not as easy as it sounds, 
-as the equivalence checking is only possible when the function design (signature etc.)
+as the equivalence checking is only possible when the function design (type signature
+etc.)
 is similar in these language. That is not necessarily the case as Cryptol
 is a functional language, whereas C and Java are imperative, and object-oriented.
 Therefore whether the SAW toolset can be used to effectively verify C and Java source
-code is matter to be investigated.
+code is a matter to be investigated.
 
-
-
-
-Even if a cryptographic algorithm is proved to be correct based on a certain 
+It should also be noted that even if a cryptographic algorithm is proved
+to be correct based on a certain 
 specificaiton, it still does
 not mean that the algorthm is secure. 
 At the moment, there is no way to prove security in Cryptol, 
