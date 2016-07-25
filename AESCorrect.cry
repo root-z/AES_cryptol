@@ -1,4 +1,6 @@
 /*
+ * See the README file for instructions on running the program.
+ *
  * This module contains the correctness properties devised for 
  * the AES algorithm.
  * Some of the properties cannot be efficiently proved, 
@@ -70,9 +72,9 @@ property rConCorrect i =
 
 // formByte and reverseFormByte verifies each other
 // proved
-formByteCorrect : Field -> Bit
-property formByteCorrect i =
-         reverseFormByte (formByte i) == i
+affineCorrect : Field -> Bit
+property affineCorrect i =
+         reverseAffine (affine i) == i
 
 // toState and fromState verifies each other
 // proved

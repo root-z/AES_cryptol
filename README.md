@@ -56,6 +56,9 @@ Similarly you can do automated tests on the property:
 As mentioned in the report, some properties can not be proved in a feasiable
 amount of time.
 
+When you are done, use the ":q" command to exit cryptol. 
+
+
 Please note that this program is developed and tested using Cryptol 2.2.6
 on Ubuntu 16.04 (obtained through apt-get). It is possible that the program
 would not function on other platforms. If you run into any trouble running it

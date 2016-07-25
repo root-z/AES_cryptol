@@ -1,4 +1,6 @@
 /*
+ * See the README file for instructions on running the program.
+ *
  * Implementation of AES algorithm 
  * with correctness properties to be verified
  * This implementation is based on the AES standard 
