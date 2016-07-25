@@ -47,6 +47,16 @@
 \maketitle
 \begin{abstract}
 
+  Implementing reliable security protocols is a difficult task, and
+  the Cryptol language is an attempt at using programming language to
+  improve reliability of cryptographic implementations. The language
+  provides interesting features such as a powerful type system, and
+  native support for formal verification. In this study we evaluate
+  Cryptol through the combination of a literature survey and an implementation
+  project. We conclude that Cryptol language is well suited for
+  cryptography, although it still has a long way to go to be a practical
+  language. 
+  
 \end{abstract}
 
 \newpage
@@ -99,7 +109,7 @@ cryptography. With these unique features, it would be interesting to see if
 the language delivers on its promises. That is exactly the purpose of this
 project: to investigate and evaluate the Cryptol programming language.
 This study provides insight on whether new programming languages can serve
-as useful tools for enhancing crytographic implementation, and what language
+as useful tools for enhancing cryptographic implementation, and what language
 features are important for cryptography.
 We discuss our approach and contributions below.
 
@@ -108,7 +118,7 @@ We discuss our approach and contributions below.
 This project involves two major components. The first part of the project
 is a literature survey, presented in Chapter~\ref{chap:survey}.
 We introduce the essential features such as the type system of the Cryptol language
-and the theory behind its formal verificaiton utilities in this section.
+and the theory behind its formal verification utilities in this section.
 Furthermore, we cover other domain specific languages and related tools for
 cryptography extensively and compare these languages with Cryptol.
 This part of the project not only serves as the foundation for further discussion,
@@ -145,7 +155,7 @@ Section~\ref{sec:crypto_lang}.
 \label{sec:cryptol}
 
 As has been mentioned before, Cryptol is a high-level programming language
-designed for cryptogpraphy. It provides a formal methods-based approach
+designed for cryptography. It provides a formal methods-based approach
 to cryptographic developments.
 
 The Cryptol language offers several benefits to development of cryptographic
@@ -176,7 +186,7 @@ so that they could focus on developing new algorithms.
 To achieve this goal, Cryptol is designed to be a pure functional programming
 language similar to Haskell. The Cryptol syntax, just like Haskell's, is
 heavily inspired mathematical notations, and therefore can express computations
-in cryptographical protocols easily.
+in cryptographic protocols easily.
 It is also argued that functional programs
 are usually shorter and easier to understand.
 The persistent data structures provided in Cryptol
@@ -240,7 +250,7 @@ is but another function that returns a Bit (boolean) type value.
 The Cryptol language provides an interactive mode similar to Haskell's with which
 developers can test functions interactively.
 Cryptol can conduct verification of the above property automatically with a simple
-\emph{:prove} command issued in its interative prompt, as shown in Figure~\ref{fig:prove}.
+\emph{:prove} command issued in its interactive prompt, as shown in Figure~\ref{fig:prove}.
 
 \begin{figure}
   \begin{lstlisting} [frame=single]
@@ -298,7 +308,7 @@ satisfiable through the \emph{:sat} command. The command finds a satisfying inpu
 for the property using an off-the-shelf SAT solver. 
 Finding satisfying assignments are interesting in cryptography because it can
 be used to formulate attacks to the cryptographic protocol. Figure~\ref{fig:sat}
-provides an example of known plaintext attacks specified in Cryptol.
+provides an example of known plain-text attacks specified in Cryptol.
 Such a property would certainly have a satisfying assignment. The point, however,
 is that Cryptol should never be able to find that assignment in a feasible amount
 of time in order for the encryption function to be safe.
@@ -341,7 +351,7 @@ when proving properties that involve algebraic equalities.
 \section{Languages for Cryptographic Applications}
 \label{sec:crypto_lang}
 
-The idea of using language features to enhance cryptogprahic applications 
+The idea of using language features to enhance cryptographic applications 
 have been investigated for over a decade. Some works, such 
 as \cite{akinyele2013charm} builds upon existing languages, and provides
 extensions, e.g. libraries and frameworks, for efficient implementation 
@@ -349,14 +359,14 @@ of cryptographic protocols.
 Other studies~\cite{lewis2003cryptol} create brand-new domain specific 
 programming languages dedicated to cryptographic applications. These
 works also focus on different aspects of implementation. Some focus
-on relaibility and correctness guarantees, while others emphasize ease 
+on reliability and correctness guarantees, while others emphasize ease 
 of use and performance.
 
 There exist languages that are designed for specific kinds of security protocols.
 ZKPDL~\cite{meiklejohn2010zkpdl}, for example, is an interpreted description language 
 for specifying zero-knowledge protocols, motivated by applications such
 as electronic cash. Although the language is designed specifically for
-implementing prover and verifer of zero-knowledge, the language itself 
+implementing prover and verifier of zero-knowledge, the language itself 
 also have potentials for specifying other types of privacy-preserving 
 systems. The ZKPDL interpreter also performs optimizations for protocols.
 
@@ -376,15 +386,15 @@ secrets to load address, and no padding oracles.
 Charm~\cite{akinyele2013charm}
 is an extensible framework in Python 
 designed for rapid prototyping of cryptographic schemes. Charm promotes
-modularity and reusability of cryptographic primitives, and successfully 
-increases inter-operability of existing numeric libraries such Sage and
+modularity and re-usability of cryptographic primitives, and successfully 
+increases interoperability of existing numeric libraries such Sage and
 the Stanford Pairing-Based Crypto (PBC). It also provides benchmarking
 and profiling utilities for determining the performance of cryptographic
 algorithms.
 
 The Ceritified computer-aided cryptography~\cite{almeida2013certified} 
 project provides a computer-aided framework for proving concrete security for
- cryptogprahic implementations. It extends EasyCrypt, an interative framework
+ cryptographic implementations. It extends EasyCrypt, an interactive framework
 for verifying the security of cryptographic applications, to
 provide formal verification for cryptographic applications implemented 
 in a C-like language. The framework also supports generation of 
@@ -394,7 +404,7 @@ retaining the security properties.
 The Cryptol language has a close relative named
 ${\mu}Cryptol$~\cite{shields2006language,pike2006verifying}
 The language focuses on providing a verifying compiler that proves the correctness
-of the code tranformation process.
+of the code transformation process.
 Agosta et al.~\cite{agosta2007domain} also proposed a domain specific language
 for cryptography based on Python. The major benefit that this work provides,
 however, is syntactic.
@@ -402,14 +412,14 @@ however, is syntactic.
 
 One of the strongest competitor for Cryptol is 
 CAO~\cite{moss2010bridging}, a language designed to facilitate high-level,
-performant implementation of the AES algorithm. The CAO compiler utilises
+performant implementation of the AES algorithm. The CAO compiler utilizes
 advanced techniques to improve performance of the implementation, but 
 provides no specific functions for verifying the correctness of the algorithm.
-There are seperate studies on verifying CAO programs such as~\cite{barbosa2010deductive},
+There are separate studies on verifying CAO programs such as~\cite{barbosa2010deductive},
 however the features are not included as a part of the language.
 
 cPLC~\cite{bangerter2011cplc} is a more recent attempt at providing a domain
-specific languages for cryptogprahy. Instead of borrowing the syntax of existing
+specific languages for cryptography. Instead of borrowing the syntax of existing
 programming languages, cPLC provides a language that is closed to the 
 mathematical notations used in the cryptography community to describe 
 protocols. Moreover cPLC provides native support for mathematical entities
@@ -427,7 +437,7 @@ Figure~\ref{fig:compare} compares Cryptol with CAO and cPLC, the languages we ha
 covered in Section~\ref{sec:crypto_lang}. These two languages are chosen because,
 like Cryptol, they focus on cryptographic applications in general. As shown in the
 table, Cryptol is the only when that employs a functional programming style, and
-also the only one that faciliates formal verification. The other two languages,
+also the only one that facilitates formal verification. The other two languages,
 although both high-level languages, put a strong focus on performance of the
 implementations.
 
@@ -462,7 +472,7 @@ of the AES algorithm and devised properties to verify the implementation.
 The AES algorithm is the current standard of symmetric key
 encryption and is well specified in~\cite{standard2001announcing}. A brief introduction
 to the algorithm and the implementation is provided in Section~\ref{sec:aes}.
-The correctness properties and results of verification is dicussed in
+The correctness properties and results of verification is discussed in
 Section~\ref{sec:correct}. In Section~\ref{sec:review} we summarize the observations
 of the language from the implementation process. 
 
@@ -470,7 +480,7 @@ of the language from the implementation process.
 \label{sec:aes}
 
 We start by providing a brief introduction to the AES algorithm in the section
-to faciliate our discuss of the implementation.
+to facilitate our discuss of the implementation.
 
 As a block cipher, the AES
 algorithm runs on a $4 \times 4$ column-major order matrix of bytes.
@@ -565,7 +575,7 @@ implementation.
 \paragraph{Type Synonyms}
 
 Remember that size of input is specified in the type signature.
-In Cryptol, we can define type synonyms to improve reusability and readability,
+In Cryptol, we can define type synonyms to improve re-usability and readability,
 just like in Haskell.
 The major data structures in AES are defined as type synonyms in Cryptol in our
 implementation.
@@ -675,7 +685,7 @@ would provide strong guarantee that the implementation is correct.
 A set of correctness properties are defined in order to verify the implementation.
 These properties for functions are designed using the three strategies:
 \begin{itemize}
-\item Verifying important properties instrinsic to the functions;
+\item Verifying important properties intrinsic to the functions;
 \item Verifying equivalence of different versions of the same function;
 \item Verifying that the reverse functions successfully undo the encrypt functions
 \end{itemize} 
@@ -768,10 +778,10 @@ please refer to the \emph{README.md} included in the project.
 In this section we summarize our observations of the Cryptol language from the both
  the literature survey and the implementation project. 
 
-First of all, Cryptol is a very unique solution to programming language for cryptograhpy.
+First of all, Cryptol is a very unique solution to programming language for cryptography.
 As we have seen in Section~\ref{sec:crypto_lang}, it is not the only language that have
 been designed specifically for cryptography. However Cryptol is the only pure functional
-language that has been proposed. Moreover, its native support for formal verificaiton is
+language that has been proposed. Moreover, its native support for formal verification is
 also unique. These features all make it stand out as a programming language for 
 cryptography.
 
@@ -873,8 +883,8 @@ code is a matter to be investigated.
 
 It should also be noted that even if a cryptographic algorithm is proved
 to be correct based on a certain 
-specificaiton, it still does
-not mean that the algorthm is secure. 
+specification, it still does
+not mean that the algorithm is secure. 
 At the moment, there is no way to prove security in Cryptol, 
 which is not an actual problem of the language. 
 Automated proof for security is a hard problem with no general solution, 
