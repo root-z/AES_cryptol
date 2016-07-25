@@ -14,6 +14,7 @@ If you are on a recent version of Ubuntu, run:
 If you cannot install Cryptol using the above command, or if you are
 on a different platform. Go to http://www.cryptol.net/downloads.html
 on obtain the binaries.
+
 To run Cryptol, simply run the cryptol file in the bin folder of binary files.
 Or directly enter "cryptol" in your command prompt if the binary is on
 the path.
@@ -28,6 +29,7 @@ Running the Program
 
 In the current version of Cryptol you can only run the source code in the
 interactive mode.
+
 Run the following command to load the source code.
     cryptol AESCorrect.cry
 
@@ -41,6 +43,7 @@ Only loading AESCorrect.cry is enough as it imports the implementation.
 
 Once the modules are loaded, you can run the functions. For example:
      encrypt (0x3243f6a8885a308d313198a2e0370734, 0x2b7e151628aed2a6abf7158809cf4f3c)
+
 This is an example from the AES standard document.
 
 To prove properties, try:
